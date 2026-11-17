@@ -1,5 +1,6 @@
 import L from 'leaflet';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { fakeTiles } from '../art/fakeTiles';
 import { Banner, towerSvg } from '../art/heraldry';
 import { Bar, Icon, Sheet } from '../components/ui';
 import { streak } from '../game/achievements';
@@ -27,11 +28,15 @@ export function MapScreen() {
     if (!el.current || map.current) return;
     const start = s.lastPos ?? landCenter(s.land) ?? DEFAULT_CENTER;
     const m = L.map(el.current, { zoomControl: false, attributionControl: true, zoomSnap: 0.5 }).setView(start, s.land ? 16 : 15.5);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 19,
-      subdomains: 'abcd',
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
-    }).addTo(m);
+    if (import.meta.env.MODE === 'artifact') {
+      fakeTiles().addTo(m);
+    } else {
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 19,
+        subdomains: 'abcd',
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+      }).addTo(m);
+    }
     map.current = m;
     if ('geolocation' in navigator && !s.walk) {
       navigator.geolocation.getCurrentPosition(

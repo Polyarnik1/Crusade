@@ -434,7 +434,11 @@ function useGameState() {
       },
 
       resetAll: () => {
-        localStorage.removeItem(KEY);
+        try {
+          localStorage.removeItem(KEY);
+        } catch {
+          /* нет доступа к хранилищу */
+        }
         setS(freshState());
       },
     }),
