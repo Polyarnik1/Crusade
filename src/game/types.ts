@@ -1,0 +1,132 @@
+import type { Feature, MultiPolygon, Polygon } from 'geojson';
+import type { BannerDef } from './cosmetics';
+
+export type LatLng = [number, number]; // [широта, долгота]
+export type Land = Feature<Polygon | MultiPolygon>;
+
+export interface Kingdom {
+  name: string;
+  form: string;
+  banner: BannerDef;
+  tower: string;
+  foundedAt: number;
+}
+
+export interface Neighbor {
+  id: string;
+  name: string;
+  form: string;
+  ruler: string;
+  banner: BannerDef;
+  tower: string;
+  land: Land | null;
+  demo: true;
+}
+
+export interface Habit {
+  id: string;
+  title: string;
+  glory: number;
+  doneDates: string[];
+}
+
+export interface WalkRecord {
+  id: string;
+  startedAt: number;
+  endedAt: number;
+  distance: number; // м
+  captured: number; // м²
+  loops: number;
+  sim: boolean;
+}
+
+export interface ActiveWalk {
+  startedAt: number;
+  pausedAt: number | null;
+  pausedTotal: number;
+  distance: number;
+  captured: number;
+  loops: number;
+  track: LatLng[];
+  segment: LatLng[];
+  segmentLen: number[]; // накопленная длина сегмента для каждой точки
+  lastTs: number;
+  sim: boolean;
+  gps: 'ok' | 'weak' | 'lost';
+}
+
+export interface DayActivity {
+  opened: boolean;
+  walkedM: number;
+  tasksDone: number;
+  goalRewarded: boolean;
+}
+
+export interface ChronicleEntry {
+  id: string;
+  ts: number;
+  kind: 'capture' | 'regalia' | 'title' | 'walk' | 'kingdom' | 'border' | 'quest';
+  text: string;
+}
+
+export interface Toast {
+  id: string;
+  title: string;
+  text?: string;
+}
+
+export interface Settings {
+  redBorders: boolean;
+  demoNeighbors: boolean;
+  hideHome: boolean;
+  home: LatLng | null;
+  homeRadius: number;
+  dailyGoalKm: number;
+  simulate: boolean;
+}
+
+export interface Flags {
+  tinyLoop: boolean;
+  tookFromNeighbor: boolean;
+  changedTower: boolean;
+  changedBanner: boolean;
+  patron: boolean;
+}
+
+export interface Hero {
+  name: string;
+  about: string;
+  books: string[];
+  films: string[];
+  games: string[];
+}
+
+export interface GameState {
+  version: 1;
+  hero: Hero;
+  kingdom: Kingdom | null;
+  land: Land | null;
+  captures: number;
+  totalArea: number;
+  totalDistance: number;
+  glory: number;
+  habitsDone: number;
+  habits: Habit[];
+  walks: WalkRecord[];
+  walk: ActiveWalk | null;
+  days: Record<string, DayActivity>;
+  unlocked: Record<string, number>;
+  seen: Record<string, true>;
+  weeklyClaimed: string[];
+  chronicle: ChronicleEntry[];
+  neighbors: Neighbor[];
+  lastPos: LatLng | null;
+  settings: Settings;
+  flags: Flags;
+  // очередь интерфейса
+  ui: {
+    showFounding: boolean;
+    unlockQueue: string[];
+    toasts: Toast[];
+  };
+}

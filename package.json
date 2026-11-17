@@ -1,0 +1,44 @@
+{
+  "name": "crusade",
+  "version": "0.1.0",
+  "description": "Crusade — геймификация жизни: захват земель на карте, задания и регалии",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Polyarnik1/crusade.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Polyarnik1/crusade/issues"
+  },
+  "homepage": "https://github.com/Polyarnik1/crusade#readme",
+  "dependencies": {
+    "@fontsource/inter": "^5.3.0",
+    "@fontsource/tiny5": "^5.3.0",
+    "@turf/area": "^7.4.0",
+    "@turf/boolean-point-in-polygon": "^7.4.0",
+    "@turf/centroid": "^7.4.0",
+    "@turf/difference": "^7.4.0",
+    "@turf/distance": "^7.4.0",
+    "@turf/helpers": "^7.4.0",
+    "@turf/intersect": "^7.4.0",
+    "@turf/union": "^7.4.0",
+    "@turf/unkink-polygon": "^7.4.0",
+    "leaflet": "^1.9.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/leaflet": "^1.9.22",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^4.7.0",
+    "typescript": "^5.9.3",
+    "vite": "^5.4.21"
+  },
+  "private": true,
+  "type": "module"
+}
