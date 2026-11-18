@@ -8,7 +8,7 @@ import { streak } from '../game/achievements';
 import { FORMS, colorHex } from '../game/cosmetics';
 import { dist, formatArea, formatKm, landArea, landCenter, towerSpots } from '../game/geo';
 import { titleOf } from '../game/levels';
-import { DEFAULT_CENTER, useGame } from '../game/store';
+import { DEFAULT_CENTER, isExiled, useGame } from '../game/store';
 import { dayKey } from '../game/achievements';
 import type { LatLng, Neighbor } from '../game/types';
 
@@ -24,6 +24,8 @@ export function MapScreen() {
   const [geo, setGeo] = useState<'wait' | 'ok' | 'denied' | 'fail' | 'none'>('wait');
   const [picked, setPicked] = useState<Neighbor | null>(null);
   const walk = s.walk;
+  const exiled = isExiled(s);
+  const ruler = FORMS.find((f) => f.id === s.kingdom?.form)?.ruler ?? 'Правитель';
   const myColor = s.kingdom ? colorHex(s.kingdom.banner.color) : NEUTRAL;
   const myTower = s.kingdom?.tower ?? 'watch';
 
@@ -245,9 +247,14 @@ export function MapScreen() {
             <div className="row" style={{ gap: 8 }}>
               <span className="legend-sw" style={{ background: myColor }} />
               <span className="pf" style={{ fontSize: 16 }}>
-                {s.kingdom ? s.kingdom.name : 'Мои земли'}: {formatArea(area)}
+                {exiled ? `${ruler} в изгнании` : `${s.kingdom ? s.kingdom.name : 'Мои земли'}: ${formatArea(area)}`}
               </span>
             </div>
+            {exiled && (
+              <div className="muted" style={{ marginTop: 4, maxWidth: 230 }}>
+                Своих земель нет. Захвати хоть клочок, чтобы вернуть владения.
+              </div>
+            )}
             {s.neighbors.length > 0 && (
               <div className="row muted" style={{ gap: 8, marginTop: 4 }}>
                 <span

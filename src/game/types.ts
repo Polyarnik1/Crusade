@@ -92,6 +92,7 @@ export interface Flags {
   changedTower: boolean;
   changedBanner: boolean;
   patron: boolean;
+  exiled?: boolean; // правитель в изгнании: своих земель нет
 }
 
 export interface Hero {

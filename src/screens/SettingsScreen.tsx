@@ -101,6 +101,11 @@ export function SettingsScreen({ onBack }: { onBack: () => void }) {
         <Row title="Тестовый поход" hint="Кнопка «В поход» запустит симуляцию: две петли рядом с тобой, без реальной ходьбы">
           <Switch on={st.simulate} onChange={(v) => act.setSettings({ simulate: v })} label="Тестовый поход" />
         </Row>
+        <Row title="Потеря земель" hint="Отобрать все земли и посмотреть, как выглядит изгнание. Вернуть их можно любым захватом">
+          <button type="button" className="btn btn-sm" style={{ marginTop: 8 }} onClick={act.loseLand} disabled={!s.land}>
+            Отобрать земли
+          </button>
+        </Row>
       </Group>
 
       <Group title="Данные">

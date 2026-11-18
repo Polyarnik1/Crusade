@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { REGALIA, dayKey } from './achievements';
-import { DEFAULT_BANNER } from './cosmetics';
+import { DEFAULT_BANNER, FORMS } from './cosmetics';
 import { CLOSE_DIST, MIN_LOOP_LEN, dist, formatArea, landArea, landCenter, loopPieces, merge, overlapArea, rect, subtract } from './geo';
 import { gloryForArea, gloryForDistance, titleOf } from './levels';
 import { makeNeighbors } from './neighbors';
@@ -141,7 +141,37 @@ function capture(d: GameState, ring: LatLng[]): boolean {
   return true;
 }
 
+/** Меньше этого — земель считай что нет: правитель оказывается в изгнании. */
+export const EXILE_BELOW = 30; // м²
+
+export function isExiled(s: GameState): boolean {
+  return !!s.kingdom && !!s.flags.exiled;
+}
+
+function rulerOf(d: GameState): string {
+  return FORMS.find((f) => f.id === d.kingdom?.form)?.ruler ?? 'Правитель';
+}
+
+function checkExile(d: GameState) {
+  if (!d.kingdom) return;
+  const has = landArea(d.land) >= EXILE_BELOW;
+  if (!has && !d.flags.exiled) {
+    d.flags.exiled = true;
+    d.land = null;
+    d.totalArea = 0;
+    const r = rulerOf(d);
+    log(d, 'border', `${r} «${d.kingdom.name}» лишился всех земель и стал правителем в изгнании.`);
+    toast(d, `${r} в изгнании`, 'Земель не осталось. Захвати любой клочок, чтобы вернуть владения');
+  } else if (has && d.flags.exiled) {
+    d.flags.exiled = false;
+    const r = rulerOf(d);
+    log(d, 'border', `${r} вернулся из изгнания: у «${d.kingdom.name}» снова есть земля.`);
+    toast(d, 'Владения возвращены', `${r} снова правит`);
+  }
+}
+
 function postProcess(d: GameState, prevGlory: number) {
+  checkExile(d);
   // недельный вызов
   const wk = weekKey();
   if (!d.weeklyClaimed.includes(wk) && weeklyCaptures(d) >= WEEKLY_GOAL) {
@@ -380,6 +410,13 @@ function useGameState() {
           if (!d.kingdom || d.kingdom.tower === tower) return;
           d.kingdom.tower = tower;
           d.flags.changedTower = true;
+        }),
+
+      // для разработки: отобрать все земли, чтобы посмотреть, как выглядит изгнание
+      loseLand: () =>
+        mutate((d) => {
+          d.land = null;
+          d.totalArea = 0;
         }),
 
       openFounding: () => mutate((d) => void (d.ui.showFounding = true)),
