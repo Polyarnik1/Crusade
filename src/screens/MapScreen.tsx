@@ -1,5 +1,6 @@
 import L from 'leaflet';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { pixelize } from '../game/pixelLand';
 import { attachTiles, type TileHandle } from '../art/tiles';
 import { Banner, towerSvg } from '../art/heraldry';
 import { Bar, Icon, Sheet } from '../components/ui';
@@ -110,10 +111,11 @@ export function MapScreen() {
     if (!m) return;
     layers.current.own?.remove();
     if (s.land) {
-      layers.current.own = L.geoJSON(s.land, {
-        style: { color: myColor, weight: 3, fillColor: myColor, fillOpacity: 0.3, lineJoin: 'miter' },
-        interactive: false,
-      }).addTo(m);
+      const px = pixelize(s.land);
+      layers.current.own = L.layerGroup([
+        L.polygon(px.rects, { stroke: false, fillColor: myColor, fillOpacity: 0.3, interactive: false }),
+        L.polyline(px.lines, { color: myColor, weight: 3, lineCap: 'square', lineJoin: 'miter', interactive: false }),
+      ]).addTo(m);
     }
   }, [s.land, myColor]);
 
@@ -126,15 +128,18 @@ export function MapScreen() {
     for (const n of s.neighbors) {
       if (!n.land) continue;
       const c = colorHex(n.banner.color);
-      L.geoJSON(n.land, {
-        style: {
+      const px = pixelize(n.land);
+      L.featureGroup([
+        L.polygon(px.rects, { stroke: false, fillColor: c, fillOpacity: 0.26 }),
+        L.polyline(px.lines, {
           color: s.settings.redBorders ? '#E85D4F' : c,
           dashArray: s.settings.redBorders ? '6 5' : undefined,
           weight: 2,
-          fillColor: c,
-          fillOpacity: 0.26,
-        },
-      })
+          lineCap: 'square',
+          lineJoin: 'miter',
+          interactive: false,
+        }),
+      ])
         .on('click', () => setPicked(n))
         .addTo(g);
     }
