@@ -1,6 +1,6 @@
 import L from 'leaflet';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { fakeTiles } from '../art/fakeTiles';
+import { attachTiles, type TileHandle } from '../art/tiles';
 import { Banner, towerSvg } from '../art/heraldry';
 import { Bar, Icon, Sheet } from '../components/ui';
 import { streak } from '../game/achievements';
@@ -18,26 +18,28 @@ export function MapScreen() {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const layers = useRef<{ own?: L.Layer; nb?: L.LayerGroup; towers?: L.LayerGroup; track?: L.Polyline; me?: L.Marker }>({});
+  const tiles = useRef<TileHandle | null>(null);
+  const [light, setLight] = useState(false);
   const [picked, setPicked] = useState<Neighbor | null>(null);
   const walk = s.walk;
   const myColor = s.kingdom ? colorHex(s.kingdom.banner.color) : NEUTRAL;
   const myTower = s.kingdom?.tower ?? 'watch';
+
+  // смена источника подложки из настроек
+  useEffect(() => {
+    if (!map.current) return;
+    tiles.current?.remove();
+    tiles.current = attachTiles(map.current, s.settings.mapSource, setLight);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [s.settings.mapSource]);
 
   // создание карты
   useEffect(() => {
     if (!el.current || map.current) return;
     const start = s.lastPos ?? landCenter(s.land) ?? DEFAULT_CENTER;
     const m = L.map(el.current, { zoomControl: false, attributionControl: true, zoomSnap: 0.5 }).setView(start, s.land ? 16 : 15.5);
-    if (import.meta.env.MODE === 'artifact') {
-      fakeTiles().addTo(m);
-    } else {
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        maxZoom: 19,
-        subdomains: 'abcd',
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
-      }).addTo(m);
-    }
     map.current = m;
+    tiles.current = attachTiles(m, s.settings.mapSource, setLight);
     if ('geolocation' in navigator && !s.walk) {
       navigator.geolocation.getCurrentPosition(
         (p) => {
@@ -52,6 +54,7 @@ export function MapScreen() {
       );
     }
     return () => {
+      tiles.current?.remove();
       m.remove();
       map.current = null;
     };
@@ -163,7 +166,7 @@ export function MapScreen() {
 
   return (
     <div className="map-wrap">
-      <div ref={el} className="map" aria-label="Карта владений" />
+      <div ref={el} className={'map' + (light ? ' map--light' : '')} aria-label="Карта владений" />
 
       <div className="hud hud-top">
         <div className="panel row" style={{ padding: '10px 12px' }}>

@@ -483,6 +483,10 @@ textarea.input {
   filter: sepia(0.35) hue-rotate(195deg) saturate(0.7) brightness(0.85) contrast(1.05);
 }
 
+.map--light .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(200deg) saturate(0.45) brightness(0.8) contrast(0.95);
+}
+
 .map .leaflet-control-attribution {
   background: rgba(11, 10, 16, 0.75);
   color: var(--muted);

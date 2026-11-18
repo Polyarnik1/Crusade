@@ -83,6 +83,7 @@ export interface Settings {
   homeRadius: number;
   dailyGoalKm: number;
   simulate: boolean;
+  mapSource: 'auto' | 'osm' | 'osmfr' | 'carto';
 }
 
 export interface Flags {

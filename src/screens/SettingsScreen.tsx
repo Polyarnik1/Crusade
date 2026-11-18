@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { Tower } from '../art/heraldry';
 import { Pixel } from '../art/Pixel';
 import { REGALIA_ART } from '../art/arts';
+import { SOURCE_LABEL, type MapSource } from '../art/tiles';
 import { Icon, Sheet, Switch } from '../components/ui';
 import { regaliaCount } from '../game/achievements';
 import { TOWERS } from '../game/cosmetics';
@@ -51,6 +52,15 @@ export function SettingsScreen({ onBack }: { onBack: () => void }) {
       <Group title="Карта">
         <Row title="Красный контур у соседей" hint="Земли соседей всегда подсвечены их цветом, контур — по желанию">
           <Switch on={st.redBorders} onChange={(v) => act.setSettings({ redBorders: v })} label="Красный контур у соседей" />
+        </Row>
+        <Row title="Подложка карты" hint="«Авто» сама находит рабочий источник. Если карта не грузится — выбери другой">
+          <div className="chips" style={{ marginTop: 8 }}>
+            {(Object.keys(SOURCE_LABEL) as MapSource[]).map((m) => (
+              <button key={m} type="button" className={'chip' + (st.mapSource === m ? ' on' : '')} onClick={() => act.setSettings({ mapSource: m })}>
+                {SOURCE_LABEL[m]}
+              </button>
+            ))}
+          </div>
         </Row>
         <Row title="Демо-соседи" hint="Пока нет сервера, рядом живут три выдуманных королевства">
           <Switch on={st.demoNeighbors} onChange={(v) => act.setSettings({ demoNeighbors: v })} label="Демо-соседи" />

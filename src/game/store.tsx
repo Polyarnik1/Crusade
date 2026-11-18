@@ -47,6 +47,7 @@ export function freshState(): GameState {
       homeRadius: 300,
       dailyGoalKm: 3,
       simulate: false,
+      mapSource: 'auto',
     },
     flags: { tinyLoop: false, tookFromNeighbor: false, changedTower: false, changedBanner: false, patron: false },
     ui: { showFounding: false, unlockQueue: [], toasts: [] },
