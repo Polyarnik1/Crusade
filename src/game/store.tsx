@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { REGALIA, dayKey } from './achievements';
 import { DEFAULT_BANNER } from './cosmetics';
-import { CLOSE_DIST, MIN_LOOP_LEN, dist, formatArea, landArea, landCenter, loopPieces, merge, overlapArea, subtract } from './geo';
+import { CLOSE_DIST, MIN_LOOP_LEN, dist, formatArea, landArea, landCenter, loopPieces, merge, overlapArea, rect, subtract } from './geo';
 import { gloryForArea, gloryForDistance, titleOf } from './levels';
 import { makeNeighbors } from './neighbors';
 import type { ChronicleEntry, DayActivity, GameState, Hero, Kingdom, LatLng, Settings } from './types';
@@ -361,6 +361,14 @@ function useGameState() {
           }
           d.kingdom = { ...k, foundedAt: d.kingdom?.foundedAt ?? Date.now() };
           d.ui.showFounding = false;
+          // стартовая столица: у нового государства без земель сразу есть удел 100×100 м вокруг игрока
+          if (isNew && !d.land && d.lastPos) {
+            const cap = rect(d.lastPos, -50, -50, 100, 100);
+            for (const n of d.neighbors) if (overlapArea(n.land, cap) > 50) n.land = subtract(n.land, cap);
+            d.land = merge(d.land, cap);
+            d.totalArea = landArea(d.land);
+            log(d, 'capture', `Заложена столица: ${formatArea(landArea(cap))} вокруг места основания.`);
+          }
           if (isNew) {
             log(d, 'kingdom', `Основано государство «${k.name}».`);
             toast(d, 'Королевство основано', k.name);

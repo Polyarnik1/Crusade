@@ -332,6 +332,18 @@ function WalkPanel() {
       : w.gps === 'weak'
         ? { t: 'GPS слабый — выйди на открытое место', c: 'var(--gold)' }
         : { t: 'Ищем спутники…', c: 'var(--red)' };
+  // подсказка, как замкнуть петлю: удел даётся за возврат к своему следу
+  const segLen = w.segmentLen[w.segmentLen.length - 1] ?? 0;
+  const first = w.segment[0];
+  const toStart = first && s.lastPos ? Math.round(dist(first, s.lastPos)) : null;
+  const loopHint =
+    w.segment.length < 2
+      ? 'Чтобы захватить землю, пройди петлю и вернись к началу пути.'
+      : segLen < 120
+        ? `Петля: пройдено ${Math.round(segLen)} из 120 м. Нужна хотя бы такая длина.`
+        : toStart !== null && toStart > 25
+          ? `Вернись к началу пути, чтобы замкнуть петлю: осталось ${toStart} м.`
+          : 'Петля замкнётся, как только ты вернёшься к своему следу.';
   return (
     <div className="panel">
       <div className="row between">
@@ -358,6 +370,11 @@ function WalkPanel() {
           <span>шагов</span>
         </div>
       </div>
+      {loopHint && (
+        <div className="muted" style={{ fontSize: 12, marginTop: 10, textAlign: 'center' }}>
+          {loopHint}
+        </div>
+      )}
       <div className="row" style={{ marginTop: 12 }}>
         {w.pausedAt ? (
           <button type="button" className="btn" style={{ flex: 1 }} onClick={act.resumeWalk}>

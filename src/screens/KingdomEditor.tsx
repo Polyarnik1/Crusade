@@ -103,6 +103,11 @@ export function KingdomEditor() {
         <Picks items={TOWERS} value={tower} reg={reg} onPick={setTower} render={(i) => <Tower tower={i.id} color={banner.color} size={32} />} />
       </Section>
 
+      {!k && !s.land && (
+        <div className="muted" style={{ marginTop: 16, fontSize: 13 }}>
+          Вокруг места, где ты стоишь, сразу появится стартовая столица в 1 га. Дальше расширяй владения походами по замкнутым петлям.
+        </div>
+      )}
       <button
         type="button"
         className="btn btn-gold btn-big"
