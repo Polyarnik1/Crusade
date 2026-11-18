@@ -20,10 +20,42 @@ export function MapScreen() {
   const layers = useRef<{ own?: L.Layer; nb?: L.LayerGroup; towers?: L.LayerGroup; track?: L.Polyline; me?: L.Marker }>({});
   const tiles = useRef<TileHandle | null>(null);
   const [light, setLight] = useState(false);
+  const [geo, setGeo] = useState<'wait' | 'ok' | 'denied' | 'fail' | 'none'>('wait');
   const [picked, setPicked] = useState<Neighbor | null>(null);
   const walk = s.walk;
   const myColor = s.kingdom ? colorHex(s.kingdom.banner.color) : NEUTRAL;
   const myTower = s.kingdom?.tower ?? 'watch';
+
+  // определение местоположения. Позицию «по умолчанию» (Москва) мы НЕ сохраняем:
+  // если геолокация не ответила — честно говорим об этом, а не подставляем чужой город.
+  const findMe = (first: boolean) => {
+    if (!('geolocation' in navigator)) {
+      setGeo('none');
+      return;
+    }
+    setGeo('wait');
+    const ok = (p: GeolocationPosition) => {
+      const pos: LatLng = [p.coords.latitude, p.coords.longitude];
+      act.setPos(pos);
+      setGeo('ok');
+      // при первом определении всегда перелетаем к игроку, даже если в сохранении лежит старая точка
+      map.current?.setView(pos, first ? 16 : Math.max(map.current.getZoom(), 16));
+    };
+    const fail = (e: GeolocationPositionError) => setGeo(e.code === 1 ? 'denied' : 'fail');
+    // сначала быстро и грубо (сеть/Wi-Fi), потом точно (GPS)
+    navigator.geolocation.getCurrentPosition(
+      ok,
+      () => navigator.geolocation.getCurrentPosition(ok, fail, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }),
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 },
+    );
+  };
+
+  const locate = () => {
+    const m = map.current;
+    if (!m) return;
+    if (geo === 'ok' && s.lastPos) m.setView(s.lastPos, Math.max(m.getZoom(), 16));
+    findMe(false);
+  };
 
   // смена источника подложки из настроек
   useEffect(() => {
@@ -40,19 +72,7 @@ export function MapScreen() {
     const m = L.map(el.current, { zoomControl: false, attributionControl: true, zoomSnap: 0.5 }).setView(start, s.land ? 16 : 15.5);
     map.current = m;
     tiles.current = attachTiles(m, s.settings.mapSource, setLight);
-    if ('geolocation' in navigator && !s.walk) {
-      navigator.geolocation.getCurrentPosition(
-        (p) => {
-          const pos: LatLng = [p.coords.latitude, p.coords.longitude];
-          act.setPos(pos);
-          if (!s.lastPos) m.setView(pos, 16);
-        },
-        () => {
-          if (!s.lastPos) act.setPos(DEFAULT_CENTER);
-        },
-        { enableHighAccuracy: true, timeout: 10000 },
-      );
-    }
+    if (!s.walk) findMe(true);
     return () => {
       tiles.current?.remove();
       m.remove();
@@ -137,6 +157,11 @@ export function MapScreen() {
   useEffect(() => {
     const m = map.current;
     if (!m || !s.lastPos) return;
+    if (geo !== 'ok' && !walk) {
+      layers.current.me?.remove();
+      layers.current.me = undefined;
+      return;
+    }
     if (!layers.current.me) {
       layers.current.me = L.marker(s.lastPos, {
         icon: L.divIcon({ className: 'me-icon', html: '<div></div>', iconSize: [22, 22], iconAnchor: [11, 11] }),
@@ -145,18 +170,7 @@ export function MapScreen() {
       }).addTo(m);
     } else layers.current.me.setLatLng(s.lastPos);
     if (walk && !walk.pausedAt) m.panTo(s.lastPos, { animate: true });
-  }, [s.lastPos, walk]);
-
-  const locate = () => {
-    const m = map.current;
-    if (!m) return;
-    if (s.lastPos) m.setView(s.lastPos, Math.max(m.getZoom(), 16));
-    navigator.geolocation?.getCurrentPosition((p) => {
-      const pos: LatLng = [p.coords.latitude, p.coords.longitude];
-      act.setPos(pos);
-      m.setView(pos, Math.max(m.getZoom(), 16));
-    });
-  };
+  }, [s.lastPos, walk, geo]);
 
   const t = titleOf(s.glory);
   const st = streak(s);
@@ -211,6 +225,14 @@ export function MapScreen() {
             <Icon name="locate" size={22} />
           </button>
         </div>
+        {geo !== 'ok' && !walk && (
+          <div className="panel" style={{ marginTop: 8, padding: '8px 10px', fontSize: 12 }}>
+            {geo === 'wait' && 'Определяю, где ты находишься…'}
+            {geo === 'denied' && 'Нет доступа к геолокации. Разреши её для этого сайта в настройках браузера (значок замка в адресной строке) и нажми кнопку справа.'}
+            {geo === 'fail' && 'Не удалось определить местоположение. Включи геолокацию на телефоне и нажми кнопку справа.'}
+            {geo === 'none' && 'Этот браузер не умеет определять местоположение. Открой игру в Chrome или Safari.'}
+          </div>
+        )}
       </div>
 
       <div className="hud hud-bottom">{walk ? <WalkPanel /> : <IdlePanel todayM={todayM} goal={goal} />}</div>

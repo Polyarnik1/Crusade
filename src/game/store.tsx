@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { REGALIA, dayKey } from './achievements';
 import { DEFAULT_BANNER } from './cosmetics';
-import { CLOSE_DIST, MIN_LOOP_LEN, dist, formatArea, landArea, loopPieces, merge, overlapArea, subtract } from './geo';
+import { CLOSE_DIST, MIN_LOOP_LEN, dist, formatArea, landArea, landCenter, loopPieces, merge, overlapArea, subtract } from './geo';
 import { gloryForArea, gloryForDistance, titleOf } from './levels';
 import { makeNeighbors } from './neighbors';
 import type { ChronicleEntry, DayActivity, GameState, Hero, Kingdom, LatLng, Settings } from './types';
@@ -198,7 +198,12 @@ function useGameState() {
       setPos: (p: LatLng) =>
         mutate((d) => {
           d.lastPos = p;
-          if (d.settings.demoNeighbors && d.neighbors.length === 0) d.neighbors = makeNeighbors(p);
+          if (d.settings.demoNeighbors) {
+            // демо-соседи живут рядом с игроком: если их оставила старая (ложная) позиция — пересоздаём
+            const first = d.neighbors.find((n) => n.land);
+            const c = first ? landCenter(first.land) : null;
+            if (d.neighbors.length === 0 || (c && dist(c, p) > 20000)) d.neighbors = makeNeighbors(p);
+          }
         }),
 
       startWalk: (sim: boolean) =>
@@ -217,8 +222,7 @@ function useGameState() {
             sim,
             gps: 'lost',
           };
-          if (d.settings.demoNeighbors && d.neighbors.length === 0)
-            d.neighbors = makeNeighbors(d.lastPos ?? DEFAULT_CENTER);
+          if (d.settings.demoNeighbors && d.neighbors.length === 0 && d.lastPos) d.neighbors = makeNeighbors(d.lastPos);
         }),
 
       pauseWalk: () =>
@@ -250,6 +254,7 @@ function useGameState() {
           if (!w || w.pausedAt) return;
           const p: LatLng = [lat, lng];
           d.lastPos = p;
+          if (d.settings.demoNeighbors && d.neighbors.length === 0) d.neighbors = makeNeighbors(p);
           if (acc > 40) {
             w.gps = 'weak';
             return;
@@ -409,8 +414,7 @@ function useGameState() {
         mutate((d) => {
           Object.assign(d.settings, patch);
           if (patch.demoNeighbors === false) d.neighbors = [];
-          if (patch.demoNeighbors === true && d.neighbors.length === 0)
-            d.neighbors = makeNeighbors(d.lastPos ?? DEFAULT_CENTER);
+          if (patch.demoNeighbors === true && d.neighbors.length === 0 && d.lastPos) d.neighbors = makeNeighbors(d.lastPos);
         }),
 
       markHome: () =>
