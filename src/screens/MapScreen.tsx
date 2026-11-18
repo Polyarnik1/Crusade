@@ -5,7 +5,7 @@ import { Banner, towerSvg } from '../art/heraldry';
 import { Bar, Icon, Sheet } from '../components/ui';
 import { streak } from '../game/achievements';
 import { FORMS, colorHex } from '../game/cosmetics';
-import { formatArea, formatKm, landArea, landCenter, towerSpots } from '../game/geo';
+import { dist, formatArea, formatKm, landArea, landCenter, towerSpots } from '../game/geo';
 import { titleOf } from '../game/levels';
 import { DEFAULT_CENTER, useGame } from '../game/store';
 import { dayKey } from '../game/achievements';
@@ -17,7 +17,7 @@ export function MapScreen() {
   const { s, act } = useGame();
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
-  const layers = useRef<{ own?: L.Layer; nb?: L.LayerGroup; towers?: L.LayerGroup; track?: L.Polyline; me?: L.Marker }>({});
+  const layers = useRef<{ own?: L.Layer; nb?: L.LayerGroup; towers?: L.LayerGroup; track?: L.Polyline; me?: L.Marker; acc?: L.Circle }>({});
   const tiles = useRef<TileHandle | null>(null);
   const [light, setLight] = useState(false);
   const [geo, setGeo] = useState<'wait' | 'ok' | 'denied' | 'fail' | 'none'>('wait');
@@ -57,6 +57,27 @@ export function MapScreen() {
     findMe(false);
   };
 
+  // пока похода нет, следим за позицией, чтобы маркер двигался вместе с игроком
+  const [acc, setAcc] = useState<number | null>(null);
+  useEffect(() => {
+    if (walk || geo !== 'ok' || !('geolocation' in navigator)) return;
+    let prev: LatLng | null = null;
+    const id = navigator.geolocation.watchPosition(
+      (p) => {
+        const pos: LatLng = [p.coords.latitude, p.coords.longitude];
+        setAcc(p.coords.accuracy);
+        if (!prev || dist(prev, pos) > 4) {
+          prev = pos;
+          act.setPos(pos);
+        }
+      },
+      () => {},
+      { enableHighAccuracy: true, maximumAge: 1000, timeout: 30000 },
+    );
+    return () => navigator.geolocation.clearWatch(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [walk === null, geo]);
+
   // смена источника подложки из настроек
   useEffect(() => {
     if (!map.current) return;
@@ -69,7 +90,8 @@ export function MapScreen() {
   useEffect(() => {
     if (!el.current || map.current) return;
     const start = s.lastPos ?? landCenter(s.land) ?? DEFAULT_CENTER;
-    const m = L.map(el.current, { zoomControl: false, attributionControl: true, zoomSnap: 0.5 }).setView(start, s.land ? 16 : 15.5);
+    const m = L.map(el.current, { zoomControl: false, attributionControl: false, zoomSnap: 0.5 }).setView(start, s.land ? 16 : 15.5);
+    L.control.attribution({ prefix: false }).addTo(m);
     map.current = m;
     tiles.current = attachTiles(m, s.settings.mapSource, setLight);
     if (!s.walk) findMe(true);
@@ -160,7 +182,18 @@ export function MapScreen() {
     if (geo !== 'ok' && !walk) {
       layers.current.me?.remove();
       layers.current.me = undefined;
+      layers.current.acc?.remove();
+      layers.current.acc = undefined;
       return;
+    }
+    // круг точности: показывает, насколько можно доверять точке
+    if (acc && !walk) {
+      if (!layers.current.acc) {
+        layers.current.acc = L.circle(s.lastPos, { radius: acc, color: '#F5D273', weight: 1, opacity: 0.6, fillOpacity: 0.08, interactive: false }).addTo(m);
+      } else layers.current.acc.setLatLng(s.lastPos).setRadius(acc);
+    } else {
+      layers.current.acc?.remove();
+      layers.current.acc = undefined;
     }
     if (!layers.current.me) {
       layers.current.me = L.marker(s.lastPos, {
@@ -170,7 +203,7 @@ export function MapScreen() {
       }).addTo(m);
     } else layers.current.me.setLatLng(s.lastPos);
     if (walk && !walk.pausedAt) m.panTo(s.lastPos, { animate: true });
-  }, [s.lastPos, walk, geo]);
+  }, [s.lastPos, walk, geo, acc]);
 
   const t = titleOf(s.glory);
   const st = streak(s);
@@ -225,6 +258,11 @@ export function MapScreen() {
             <Icon name="locate" size={22} />
           </button>
         </div>
+        {geo === 'ok' && !walk && acc !== null && acc > 50 && (
+          <div className="panel" style={{ marginTop: 8, padding: '8px 10px', fontSize: 12 }}>
+            Сигнал слабый: точность около {Math.round(acc)} м. Выйди на открытое место и включи в телефоне «Точное местоположение» / GPS.
+          </div>
+        )}
         {geo !== 'ok' && !walk && (
           <div className="panel" style={{ marginTop: 8, padding: '8px 10px', fontSize: 12 }}>
             {geo === 'wait' && 'Определяю, где ты находишься…'}
