@@ -7,10 +7,12 @@ import { HEADERS, type SceneDef } from './scenes';
 import { Scene2 } from '../scenes2/engine2';
 import { FX2, H as H2, SCENES2, W as W2 } from '../scenes2/scenes2';
 import type { Fx } from './scenes';
+import { frost, isInterior, winterize } from '../scenes2/winter';
+import { nightWatch } from '../scenes2/watch';
 
 // регалии — вторая версия сцен
-const SCENES: Record<string, SceneDef & { glow?: [number, number, number, number] }> = Object.fromEntries(
-  Object.entries(SCENES2).map(([k, d]) => [k, { w: W2, h: H2, fx: (FX2[k]?.fx ?? 'none') as Fx, emit: FX2[k]?.emit, subject: FX2[k]?.subject, glow: FX2[k]?.glow, draw: d.draw as unknown as SceneDef['draw'], v2: true }]),
+const SCENES: Record<string, SceneDef & { glow?: [number, number, number, number]; sparkle?: [number, number][] }> = Object.fromEntries(
+  Object.entries(SCENES2).map(([k, d]) => [k, { w: W2, h: H2, fx: (FX2[k]?.fx ?? 'none') as Fx, emit: FX2[k]?.emit, subject: FX2[k]?.subject, glow: FX2[k]?.glow, sparkle: FX2[k]?.sparkle, draw: d.draw as unknown as SceneDef['draw'], v2: true, winter: true }]),
 );
 
 const outDir = process.argv[2] ?? 'shots';
@@ -81,7 +83,22 @@ function renderAll(defs: Record<string, SceneDef>) {
   let i = 0;
   for (const [id, d] of Object.entries(defs)) {
     const s = (d as { v2?: boolean }).v2 ? new Scene2(d.w, d.h, 2000 + i++ * 41) : new Scene(d.w, d.h, 1000 + i++ * 37);
-    try { d.draw(s); res[id] = { w: d.w, h: d.h, data: s.render() }; } catch (e) { console.log('FAIL', id, (e as Error).message); throw e; }
+    try {
+      if ((d as { winter?: boolean }).winter) {
+        // зима: «Ночной дозор» рисуется отдельно, остальным сцены накрываем снегом
+        const s2 = s as Scene2;
+        if (id === 'night') nightWatch(s2, true);
+        else {
+          d.draw(s2 as never);
+          const inside = isInterior(s2);
+          winterize(s2);
+          if (inside) { const data = s2.render(); frost(data, d.w, d.h); res[id] = { w: d.w, h: d.h, data }; continue; }
+          const ex = d as { fx: string };
+          if (['dust', 'stars', 'fireflies', 'ash'].includes(ex.fx)) ex.fx = 'snow';
+        }
+      } else d.draw(s);
+      res[id] = { w: d.w, h: d.h, data: s.render() };
+    } catch (e) { console.log('FAIL', id, (e as Error).message); throw e; }
     continue;
     res[id] = { w: d.w, h: d.h, data: s.render() };
   }
@@ -123,11 +140,11 @@ sheet('headers', hd, 3, 2);
 const enc = (o: typeof sc) =>
   Object.fromEntries(Object.entries(o).map(([k, v]) => [k, 'data:image/png;base64,' + png(v.w, v.h, v.data).toString('base64')]));
 const meta = (defs: Record<string, SceneDef>) =>
-  Object.fromEntries(Object.entries(defs).map(([k, d]) => [k, { w: d.w, h: d.h, fx: d.fx, emit: d.emit, subject: !!d.subject, glow: (d as { glow?: number[] }).glow }]));
+  Object.fromEntries(Object.entries(defs).map(([k, d]) => [k, { w: d.w, h: d.h, fx: d.fx, emit: d.emit, subject: !!d.subject, glow: (d as { glow?: number[] }).glow, sparkle: (d as { sparkle?: number[][] }).sparkle }]));
 
 const file = `// Сгенерировано tools/scenes (npm run art:scenes). Не править руками.
 export type Fx = 'snow' | 'blizzard' | 'embers' | 'fireflies' | 'ash' | 'dust' | 'stars' | 'rain' | 'none';
-export interface SceneMeta { w: number; h: number; fx: Fx; emit?: [number, number]; subject: boolean; glow?: [number, number, number, number] }
+export interface SceneMeta { w: number; h: number; fx: Fx; emit?: [number, number]; subject: boolean; glow?: [number, number, number, number]; sparkle?: [number, number][] }
 export const SCENE_META: Record<string, SceneMeta> = ${JSON.stringify(meta(SCENES))};
 export const HEADER_META: Record<string, SceneMeta> = ${JSON.stringify(meta(HEADERS))};
 export const SCENE_IMG: Record<string, string> = ${JSON.stringify(enc(sc), null, 0)};

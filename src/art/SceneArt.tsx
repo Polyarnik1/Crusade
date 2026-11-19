@@ -110,7 +110,7 @@ function alpha(p: P, fx: Fx, t: number): number {
 function usePixelParticles(ref: React.RefObject<HTMLCanvasElement>, fx: Fx, m: SceneMeta, on: boolean) {
   useEffect(() => {
     const cv = ref.current;
-    if (!cv || (fx === 'none' && !m.glow) || !on) return;
+    if (!cv || (fx === 'none' && !m.glow && !m.sparkle) || !on) return;
     const ctx = cv.getContext('2d');
     if (!ctx) return;
     const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -119,6 +119,8 @@ function usePixelParticles(ref: React.RefObject<HTMLCanvasElement>, fx: Fx, m: S
     let last = performance.now();
     let visible = true;
     let glow = { start: 0.4, dur: 0.9, peak: 1, twin: false };
+    // золото на мече: у каждой точки свой ритм
+    const sparks = (m.sparkle ?? []).map((_, i) => ({ start: 0.8 + i * 1.3, dur: 0.8, peak: 1 }));
     const io = new IntersectionObserver(([e]) => (visible = e.isIntersecting));
     io.observe(cv);
     const cols = COLORS[fx];
@@ -188,6 +190,31 @@ function usePixelParticles(ref: React.RefObject<HTMLCanvasElement>, fx: Fx, m: S
           ctx.fillRect(gx * k, gy * k, gw * k, gh * k);
         }
       }
+      // острая четырёхлучевая звёздочка на золотых деталях
+      (m.sparkle ?? []).forEach(([sx, sy], i) => {
+        const sp = sparks[i];
+        if (t >= sp.start + sp.dur) {
+          sparks[i] = { start: t + 0.9 + Math.random() * 2.8, dur: 0.55 + Math.random() * 0.6, peak: 0.6 + Math.random() * 0.4 };
+          return;
+        }
+        const u = (t - sp.start) / sp.dur;
+        if (u < 0 || u >= 1) return;
+        const sm = (x: number) => x * x * (3 - 2 * x);
+        const e = (u < 0.35 ? sm(u / 0.35) : sm(1 - (u - 0.35) / 0.65)) * sp.peak;
+        const len = Math.max(2, Math.round(3 + e * 7)); // длина луча в пикселях сцены
+        ctx.fillStyle = '#fffbe0';
+        for (let r = 1; r <= len; r++) {
+          const a = Math.min(1, e * 1.15) * (1 - (r - 1) / (len + 0.5)) ** 0.9;
+          ctx.globalAlpha = a;
+          for (const [dx, dy] of [[r, 0], [-r, 0], [0, r], [0, -r]]) ctx.fillRect((sx + dx) * k, (sy + dy) * k, k, k);
+        }
+        ctx.globalAlpha = Math.min(1, e * 1.2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(sx * k, sy * k, k, k);
+        ctx.globalAlpha = e * 0.35;
+        ctx.fillStyle = '#ffe08a';
+        for (const [dx, dy] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) ctx.fillRect((sx + dx) * k, (sy + dy) * k, k, k);
+      });
       ctx.globalAlpha = 1;
       if (reduce) cancelAnimationFrame(raf);
     };

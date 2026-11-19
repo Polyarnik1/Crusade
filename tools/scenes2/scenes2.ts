@@ -632,13 +632,13 @@ Object.assign(SCENES2, {
 });
 
 // эффекты частиц, источники искр и «мигалка» в щели шлема
-export const FX2: Record<string, { fx: string; emit?: [number, number]; subject?: boolean; glow?: [number, number, number, number] }> = {
+export const FX2: Record<string, { fx: string; emit?: [number, number]; subject?: boolean; glow?: [number, number, number, number]; sparkle?: [number, number][] }> = {
   fire_keeper: { fx: 'embers', emit: [100, 84], subject: true },
   first_land: { fx: 'snow', subject: true, glow: [73, 48, 9, 2] },
   founder: { fx: 'dust' },
   couch: { fx: 'dust', subject: true },
   streak7: { fx: 'dust' },
-  night: { fx: 'stars' },
+  night: { fx: 'snow', sparkle: [[127, 76], [154, 92]] },
   early: { fx: 'dust' },
   circle: { fx: 'fireflies' },
   winter: { fx: 'blizzard' },
