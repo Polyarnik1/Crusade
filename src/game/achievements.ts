@@ -306,15 +306,6 @@ export const REGALIA: Regalia[] = [
     check: (s) => s.walks.some((w) => dateIs(w.startedAt, 5, [20, 21, 22]) || dateIs(w.startedAt, 11, [20, 21, 22])),
   },
   {
-    id: 'new_year',
-    name: 'Новогодний дозор',
-    how: 'Выйти в поход 31 декабря или 1 января',
-    quote: 'Пока страна режет оливье, ты режешь новые границы.',
-    rarity: 'rare',
-    kind: 'curio',
-    check: (s) => s.walks.some((w) => dateIs(w.startedAt, 11, [31]) || dateIs(w.startedAt, 0, [1])),
-  },
-  {
     id: 'triple',
     name: 'Пришёл, увидел, захватил',
     how: 'Захватить три удела за один поход',
@@ -395,4 +386,4 @@ export const REGALIA: Regalia[] = [
   },
 ];
 
-export const regaliaCount = (s: GameState) => Object.keys(s.unlocked).length;
+export const regaliaCount = (s: GameState) => REGALIA.filter((r) => s.unlocked[r.id]).length;

@@ -457,24 +457,6 @@ export const SCENES: Record<string, SceneDef> = {
       knight(s, 50, 43, KNIGHT_V);
     },
   },
-  new_year: {
-    w: W, h: H, fx: 'snow',
-    draw: (s) => {
-      nightBase(s, { moon: [92, 12, 6], stars: 90, clouds: false });
-      s.ridge({ base: 46, amp: 10, freq: 0.05, m: M.MTN_FAR, haze: 0.25, snow: 6 });
-      s.hill((x) => 58 + Math.sin(x * 0.05) * 1.5, M.SNOW, { lift: 0.32 });
-      [8, 22, 74, 88].forEach((x, i) => s.house(x, 58 + (i % 2), 10, 7, { snow: true }));
-      // ёлка с огнями
-      s.pine(54, 62, 26, true);
-      [[50, 46], [57, 50], [49, 55], [59, 57], [53, 42], [55, 53]].forEach(([x, y], i) => {
-        s.put(x, y, i % 2 ? M.WINDOW : M.FIRE, 0.95);
-        s.light(x, y, 6, 0.3);
-      });
-      s.put(54, 35, M.GOLD, 1);
-      s.put(53, 36, M.GOLD, 0.8);
-      s.put(55, 36, M.GOLD, 0.8);
-    },
-  },
   triple: {
     w: W, h: H, fx: 'snow',
     draw: (s) => {

@@ -38,7 +38,7 @@ export function App() {
   // во время похода регалии приходят тостом, а торжественное окно — после похода
   const unlockId = s.walk ? undefined : s.ui.unlockQueue[0];
   const unlock = unlockId ? REGALIA.find((r) => r.id === unlockId) : null;
-  const unseen = Object.keys(s.unlocked).some((id) => !s.seen[id]);
+  const unseen = REGALIA.some((r) => s.unlocked[r.id] && !s.seen[r.id]);
 
   return (
     <div className="app">

@@ -70,7 +70,13 @@ function load(): GameState {
       settings: { ...base.settings, ...parsed.settings },
       flags: { ...base.flags, ...parsed.flags },
       hero: { ...base.hero, ...parsed.hero },
-      ui: { ...base.ui, ...parsed.ui, toasts: [] },
+      ui: {
+        ...base.ui,
+        ...parsed.ui,
+        toasts: [],
+        // убранные регалии не должны застревать в очереди
+        unlockQueue: (parsed.ui?.unlockQueue ?? []).filter((id) => REGALIA.some((r) => r.id === id)),
+      },
     };
   } catch {
     return freshState();
