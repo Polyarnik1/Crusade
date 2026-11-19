@@ -11,9 +11,12 @@ import { frost, isInterior, winterize } from '../scenes2/winter';
 import { nightWatch } from '../scenes2/watch';
 
 // регалии — вторая версия сцен
-const SCENES: Record<string, SceneDef & { glow?: [number, number, number, number]; sparkle?: [number, number][] }> = Object.fromEntries(
-  Object.entries(SCENES2).map(([k, d]) => [k, { w: W2, h: H2, fx: (FX2[k]?.fx ?? 'none') as Fx, emit: FX2[k]?.emit, subject: FX2[k]?.subject, glow: FX2[k]?.glow, sparkle: FX2[k]?.sparkle, draw: d.draw as unknown as SceneDef['draw'], v2: true, winter: true }]),
+const makeScenes = (): Record<string, SceneDef & { glow?: [number, number, number, number]; sparkle?: [number, number][] }> => Object.fromEntries(
+  Object.entries(SCENES2).map(([k, d]) => [k, { w: W2, h: H2, fx: (FX2[k]?.fx ?? 'none') as Fx, emit: FX2[k]?.emit, subject: FX2[k]?.subject, glow: FX2[k]?.glow, sparkle: FX2[k]?.sparkle, draw: d.draw as unknown as SceneDef['draw'], v2: true }]),
 );
+const SCENES = makeScenes(); // зима
+const SCENES_SUMMER = makeScenes(); // лето: исходные сцены без снега
+SCENES_SUMMER.night.fx = 'stars';
 
 const outDir = process.argv[2] ?? 'shots';
 mkdirSync(outDir, { recursive: true });
@@ -78,13 +81,14 @@ function png(w: number, h: number, data: Uint8Array): Buffer {
   ]);
 }
 
-function renderAll(defs: Record<string, SceneDef>) {
+function renderAll(defs: Record<string, SceneDef>, mode: 'winter' | 'summer' | 'plain' = 'plain') {
   const res: Record<string, { w: number; h: number; data: Uint8Array }> = {};
   let i = 0;
   for (const [id, d] of Object.entries(defs)) {
     const s = (d as { v2?: boolean }).v2 ? new Scene2(d.w, d.h, 2000 + i++ * 41) : new Scene(d.w, d.h, 1000 + i++ * 37);
     try {
-      if ((d as { winter?: boolean }).winter) {
+      if (mode === 'summer' && id === 'night') nightWatch(s as Scene2, false);
+      else if (mode === 'winter') {
         // зима: «Ночной дозор» рисуется отдельно, остальным сцены накрываем снегом
         const s2 = s as Scene2;
         if (id === 'night') nightWatch(s2, true);
@@ -130,11 +134,13 @@ function sheet(name: string, items: Record<string, { w: number; h: number; data:
   writeFileSync(`${outDir}/${name}.png`, png(W, H, out));
 }
 
-const sc = renderAll(SCENES);
+const sc = renderAll(SCENES, 'winter');
+const scSummer = renderAll(SCENES_SUMMER, 'summer');
 const hd = renderAll(HEADERS);
 const only = process.env.ONLY?.split(',');
 const pick = (o: typeof sc) => (only ? Object.fromEntries(Object.entries(o).filter(([k]) => only.includes(k))) : o);
 sheet('scenes', pick(sc), 3, only ? Math.min(2, only.length) : 4);
+sheet('scenes-summer', pick(scSummer), 3, only ? Math.min(2, only.length) : 4);
 sheet('headers', hd, 3, 2);
 
 const enc = (o: typeof sc) =>
@@ -146,8 +152,10 @@ const file = `// Сгенерировано tools/scenes (npm run art:scenes). �
 export type Fx = 'snow' | 'blizzard' | 'embers' | 'fireflies' | 'ash' | 'dust' | 'stars' | 'rain' | 'none';
 export interface SceneMeta { w: number; h: number; fx: Fx; emit?: [number, number]; subject: boolean; glow?: [number, number, number, number]; sparkle?: [number, number][] }
 export const SCENE_META: Record<string, SceneMeta> = ${JSON.stringify(meta(SCENES))};
+export const SCENE_META_SUMMER: Record<string, SceneMeta> = ${JSON.stringify(meta(SCENES_SUMMER))};
 export const HEADER_META: Record<string, SceneMeta> = ${JSON.stringify(meta(HEADERS))};
 export const SCENE_IMG: Record<string, string> = ${JSON.stringify(enc(sc), null, 0)};
+export const SCENE_IMG_SUMMER: Record<string, string> = ${JSON.stringify(enc(scSummer), null, 0)};
 export const HEADER_IMG: Record<string, string> = ${JSON.stringify(enc(hd), null, 0)};
 `;
 writeFileSync('src/art/scenes.gen.ts', file);

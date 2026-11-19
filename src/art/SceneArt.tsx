@@ -1,5 +1,13 @@
 import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
-import { HEADER_IMG, HEADER_META, SCENE_IMG, SCENE_META, type Fx, type SceneMeta } from './scenes.gen';
+import { HEADER_IMG, HEADER_META, SCENE_IMG, SCENE_IMG_SUMMER, SCENE_META, SCENE_META_SUMMER, type Fx, type SceneMeta } from './scenes.gen';
+
+/** Лето для карточек: с 1 мая по 10 сентября — без снега, в остальное время — зима. */
+export function isSummer(d = new Date()) {
+  const m = d.getMonth();
+  return (m >= 4 && m <= 7) || (m === 8 && d.getDate() <= 10);
+}
+const sceneImgs = () => (isSummer() ? SCENE_IMG_SUMMER : SCENE_IMG);
+const sceneMetas = () => (isSummer() ? SCENE_META_SUMMER : SCENE_META);
 
 // Частицы рисуются в «пикселях сцены» и привязываются к её сетке,
 // поэтому снег и искры выглядят частью пиксель-арта, а не наложенным эффектом.
@@ -237,15 +245,15 @@ interface Props {
 }
 
 export function hasScene(id: string) {
-  return !!SCENE_IMG[id];
+  return !!sceneImgs()[id];
 }
 export function sceneHasSubject(id: string) {
-  return !!SCENE_META[id]?.subject;
+  return !!sceneMetas()[id]?.subject;
 }
 
 export function SceneArt({ id, header, animate = true, dim, className, style, children }: Props) {
-  const meta = (header ? HEADER_META : SCENE_META)[id];
-  const img = (header ? HEADER_IMG : SCENE_IMG)[id];
+  const meta = (header ? HEADER_META : sceneMetas())[id];
+  const img = (header ? HEADER_IMG : sceneImgs())[id];
   const cv = useRef<HTMLCanvasElement>(null);
   usePixelParticles(cv, meta?.fx ?? 'none', meta, animate && !!meta);
   if (!meta || !img) return null;
@@ -263,8 +271,8 @@ export function SceneArt({ id, header, animate = true, dim, className, style, ch
 
 /** Статичная миниатюра: сцена 1:1, обрезанная по центру. */
 export function SceneThumb({ id, dim }: { id: string; dim?: boolean }) {
-  const img = SCENE_IMG[id];
-  const m = SCENE_META[id];
+  const img = sceneImgs()[id];
+  const m = sceneMetas()[id];
   if (!img || !m) return null;
   return (
     <div
