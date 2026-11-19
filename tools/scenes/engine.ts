@@ -13,7 +13,7 @@ interface MatDef {
   emissive?: boolean; // светится сам, свет на него не влияет
 }
 
-const MATS: MatDef[] = [];
+export const MATS: MatDef[] = [];
 function mat(ramp: string[], o: { warm?: number; emissive?: boolean } = {}): number {
   MATS.push({ ramp: ramp.map(hex), ...o });
   return MATS.length - 1;
