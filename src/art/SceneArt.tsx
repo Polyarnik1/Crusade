@@ -118,6 +118,7 @@ function usePixelParticles(ref: React.RefObject<HTMLCanvasElement>, fx: Fx, m: S
     let raf = 0;
     let last = performance.now();
     let visible = true;
+    let glow = { start: 0.4, dur: 0.9, peak: 1, twin: false };
     const io = new IntersectionObserver(([e]) => (visible = e.isIntersecting));
     io.observe(cv);
     const cols = COLORS[fx];
@@ -159,18 +160,30 @@ function usePixelParticles(ref: React.RefObject<HTMLCanvasElement>, fx: Fx, m: S
           ctx.fillRect(px, py + k, k, k);
         }
       }
-      // свечение из смотровой щели: вспышка раз в полторы секунды
+      // свечение из смотровой щели: неравномерные вспышки, плавный разгон и затухание
       if (m.glow) {
-        const ph = t % 1.5;
-        if (ph < 0.5) {
-          const a = Math.sin((ph / 0.5) * Math.PI);
+        if (t >= glow.start + glow.dur) {
+          const double = !glow.twin && Math.random() < 0.22; // иногда моргает дважды подряд
+          glow = {
+            start: t + (double ? 0.12 + Math.random() * 0.2 : 0.6 + Math.random() * 2.6),
+            dur: 0.55 + Math.random() * 0.75,
+            peak: 0.5 + Math.random() * 0.5,
+            twin: double,
+          };
+        }
+        const u = (t - glow.start) / glow.dur;
+        if (u >= 0 && u < 1) {
+          const sm = (x: number) => x * x * (3 - 2 * x);
+          const e = (u < 0.3 ? sm(u / 0.3) : Math.pow(sm(1 - (u - 0.3) / 0.7), 1.4)) * glow.peak;
           const [gx, gy, gw, gh] = m.glow;
           ctx.fillStyle = '#ffffff';
-          ctx.globalAlpha = a * 0.3;
-          ctx.fillRect((gx - 1) * k, (gy - 1) * k, (gw + 2) * k, (gh + 2) * k);
-          ctx.globalAlpha = a * 0.15;
-          ctx.fillRect((gx - 2) * k, gy * k, (gw + 4) * k, gh * k);
-          ctx.globalAlpha = a;
+          ctx.globalAlpha = e * 0.1;
+          ctx.fillRect((gx - 3) * k, (gy - 2) * k, (gw + 6) * k, (gh + 4) * k);
+          ctx.globalAlpha = e * 0.18;
+          ctx.fillRect((gx - 2) * k, (gy - 1) * k, (gw + 4) * k, (gh + 2) * k);
+          ctx.globalAlpha = e * 0.3;
+          ctx.fillRect((gx - 1) * k, gy * k, (gw + 2) * k, gh * k);
+          ctx.globalAlpha = e;
           ctx.fillStyle = '#f4f8ff';
           ctx.fillRect(gx * k, gy * k, gw * k, gh * k);
         }
