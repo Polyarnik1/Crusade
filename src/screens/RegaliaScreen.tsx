@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { sfx } from '../audio/sfx';
 import { Pixel } from '../art/Pixel';
 import { REGALIA_ART } from '../art/arts';
+import { SceneArt, SceneThumb, sceneHasSubject } from '../art/SceneArt';
 import { Bar, Icon, Sheet } from '../components/ui';
 import { RARITY, REGALIA, regaliaCount, type Regalia } from '../game/achievements';
 import { nextUnlock } from '../game/cosmetics';
@@ -20,9 +22,10 @@ export function RegaliaScreen() {
 
   return (
     <div className="screen">
-      <div className="row between" style={{ alignItems: 'baseline' }}>
+      <div className="screen-hero">
+        <SceneArt id="regalia" header />
         <h1 className="screen-title">Регалии</h1>
-        <div className="pf muted" style={{ fontSize: 24 }}>
+        <div className="hero-right pf muted" style={{ fontSize: 24 }}>
           <span style={{ color: 'var(--gold)', fontWeight: 600 }}>{count}</span> / {REGALIA.length}
         </div>
       </div>
@@ -71,9 +74,10 @@ export function RegaliaScreen() {
                 if (fresh) act.markSeen(r.id);
               }}
             >
+              <SceneThumb id={r.id} dim={!got} />
               {fresh && <span className="new">новая</span>}
-              <div className="art">
-                <Pixel grid={REGALIA_ART[r.id]} size={r.id === 'couch' ? 56 : 48} gray={!got} />
+              <div className="medal">
+                <Pixel grid={REGALIA_ART[r.id]} size={r.id === 'couch' ? 40 : 36} gray={!got} />
               </div>
               <div className="pf" style={{ fontSize: 16, fontWeight: 600, lineHeight: 1.1, marginTop: 10, color: got ? 'var(--text)' : 'var(--muted)' }}>
                 {r.name}
@@ -96,34 +100,35 @@ export function RegaliaScreen() {
 
 export function RegaliaSheet({ r, onClose, fresh }: { r: Regalia; onClose: () => void; fresh?: boolean }) {
   const { s } = useGame();
+  useEffect(() => {
+    if (fresh) sfx.play('regalia');
+  }, [fresh, r.id]);
   const got = s.unlocked[r.id];
   const rar = RARITY[r.rarity];
   const prog = r.progress?.(s);
   return (
     <Sheet onClose={onClose} label={`Регалия: ${r.name}`} center={fresh}>
-      {fresh && (
-        <div className="pf" style={{ textAlign: 'center', color: 'var(--gold)', fontSize: 24, fontWeight: 600, marginBottom: 12 }}>
-          Новая регалия!
-        </div>
-      )}
-      <div className="big-art" style={{ borderColor: got ? rar.color : undefined }}>
-        {got && <div className="burst" />}
-        <div style={{ opacity: got ? 1 : 0.6 }}>
-          <Pixel grid={REGALIA_ART[r.id]} size={r.id === 'couch' ? 256 : 192} title={r.name} />
-        </div>
+      <div className="sheet-scene" style={{ '--rc': got ? rar.color : '#4a4858' } as React.CSSProperties}>
+        <SceneArt id={r.id} dim={!got} />
+        {fresh && <div className="fresh">Новая регалия!</div>}
+        {!got && (
+          <div className="lock" aria-label="Закрыто">
+            <Icon name="lock" size={20} />
+          </div>
+        )}
+        {!sceneHasSubject(r.id) && (
+          <div className="medal">
+            <Pixel grid={REGALIA_ART[r.id]} size={60} gray={!got} title={r.name} />
+          </div>
+        )}
       </div>
-      <div className="row between" style={{ marginTop: 16, alignItems: 'flex-start' }}>
+      <div className="row between" style={{ marginTop: sceneHasSubject(r.id) ? 16 : 46, alignItems: 'flex-start' }}>
         <div>
           <div className="pf" style={{ fontSize: 32, fontWeight: 600, lineHeight: 1.05 }}>{r.name}</div>
           <div className="pf" style={{ fontSize: 16, marginTop: 6, color: got ? rar.color : 'var(--muted)' }}>
             {r.kind === 'curio' ? 'Курьёз' : 'Подвиг'} · {rar.name}
           </div>
         </div>
-        {!got && (
-          <div className="muted" aria-label="Закрыто">
-            <Icon name="lock" size={20} />
-          </div>
-        )}
       </div>
       <blockquote className="quote" style={{ marginTop: 16, borderLeftColor: got ? rar.color : '#4a4858' }}>
         «{r.quote}»

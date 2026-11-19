@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { REGALIA, dayKey } from './achievements';
+import type { SfxName } from '../audio/sfx';
 import { DEFAULT_BANNER, FORMS } from './cosmetics';
 import { CLOSE_DIST, MIN_LOOP_LEN, dist, formatArea, landArea, landCenter, loopPieces, merge, overlapArea, rect, subtract } from './geo';
 import { gloryForArea, gloryForDistance, titleOf } from './levels';
@@ -48,6 +49,8 @@ export function freshState(): GameState {
       dailyGoalKm: 3,
       simulate: false,
       mapSource: 'auto',
+      sound: true,
+      volume: 0.7,
     },
     flags: { tinyLoop: false, tookFromNeighbor: false, changedTower: false, changedBanner: false, patron: false },
     ui: { showFounding: false, unlockQueue: [], toasts: [] },
@@ -98,8 +101,8 @@ function log(d: GameState, kind: ChronicleEntry['kind'], text: string) {
   if (d.chronicle.length > 300) d.chronicle.length = 300;
 }
 
-function toast(d: GameState, title: string, text?: string) {
-  d.ui.toasts.push({ id: uid(), title, text });
+function toast(d: GameState, title: string, text?: string, sound: SfxName = 'toast') {
+  d.ui.toasts.push({ id: uid(), title, text, sound });
   if (d.ui.toasts.length > 3) d.ui.toasts.shift();
 }
 
@@ -116,7 +119,7 @@ function capture(d: GameState, ring: LatLng[]): boolean {
         n.land = subtract(n.land, piece);
         if (!d.flags.tookFromNeighbor) d.flags.tookFromNeighbor = true;
         log(d, 'border', `Ты отвоевал земли у владений «${n.name}» (${n.ruler}).`);
-        toast(d, 'Граница сдвинулась', `Часть земель «${n.name}» теперь твоя`);
+        toast(d, 'Граница сдвинулась', `Часть земель «${n.name}» теперь твоя`, 'border');
       }
     }
     d.land = merge(d.land, piece);
@@ -137,7 +140,7 @@ function capture(d: GameState, ring: LatLng[]): boolean {
   const g = gloryForArea(gained);
   d.glory += g;
   log(d, 'capture', `Захвачен удел: +${formatArea(gained)}, +${g} славы.`);
-  toast(d, `Новый удел! +${g} славы`, `+${formatArea(gained)} к владениям`);
+  toast(d, `Новый удел! +${g} славы`, `+${formatArea(gained)} к владениям`, 'capture');
   return true;
 }
 
@@ -157,16 +160,18 @@ function checkExile(d: GameState) {
   const has = landArea(d.land) >= EXILE_BELOW;
   if (!has && !d.flags.exiled) {
     d.flags.exiled = true;
+    d.flags.everExiled = true;
     d.land = null;
     d.totalArea = 0;
     const r = rulerOf(d);
     log(d, 'border', `${r} «${d.kingdom.name}» лишился всех земель и стал правителем в изгнании.`);
-    toast(d, `${r} в изгнании`, 'Земель не осталось. Захвати любой клочок, чтобы вернуть владения');
+    toast(d, `${r} в изгнании`, 'Земель не осталось. Захвати любой клочок, чтобы вернуть владения', 'exile');
   } else if (has && d.flags.exiled) {
     d.flags.exiled = false;
+    d.flags.returned = true;
     const r = rulerOf(d);
     log(d, 'border', `${r} вернулся из изгнания: у «${d.kingdom.name}» снова есть земля.`);
-    toast(d, 'Владения возвращены', `${r} снова правит`);
+    toast(d, 'Владения возвращены', `${r} снова правит`, 'restore');
   }
 }
 
@@ -178,7 +183,7 @@ function postProcess(d: GameState, prevGlory: number) {
     d.weeklyClaimed.push(wk);
     d.glory += WEEKLY_REWARD;
     log(d, 'quest', `Недельный вызов выполнен: +${WEEKLY_REWARD} славы.`);
-    toast(d, 'Недельный вызов выполнен', `+${WEEKLY_REWARD} славы`);
+    toast(d, 'Недельный вызов выполнен', `+${WEEKLY_REWARD} славы`, 'quest');
   }
   // регалии (по кругу, т.к. одна может открыть другую, например «Слава в веках»)
   for (let pass = 0; pass < 2; pass++) {
@@ -188,7 +193,7 @@ function postProcess(d: GameState, prevGlory: number) {
         d.unlocked[r.id] = Date.now();
         d.ui.unlockQueue.push(r.id);
         log(d, 'regalia', `Получена регалия «${r.name}».`);
-        if (d.walk) toast(d, 'Новая регалия!', r.name);
+        if (d.walk) toast(d, 'Новая регалия!', r.name, 'regalia');
       }
     }
   }
@@ -196,7 +201,7 @@ function postProcess(d: GameState, prevGlory: number) {
   const now = titleOf(d.glory);
   if (now.level > was.level) {
     log(d, 'title', `Новый титул: ${now.name}.`);
-    toast(d, `Новый титул: ${now.name}`, `Уровень ${now.level}`);
+    toast(d, `Новый титул: ${now.name}`, `Уровень ${now.level}`, 'title');
   }
 }
 
@@ -307,7 +312,7 @@ function useGameState() {
               day.goalRewarded = true;
               d.glory += DAILY_GOAL_REWARD;
               log(d, 'quest', `Поход дня выполнен: ${d.settings.dailyGoalKm} км, +${DAILY_GOAL_REWARD} славы.`);
-              toast(d, 'Поход дня выполнен', `+${DAILY_GOAL_REWARD} славы`);
+              toast(d, 'Поход дня выполнен', `+${DAILY_GOAL_REWARD} славы`, 'quest');
             }
           }
           w.gps = 'ok';
@@ -351,6 +356,7 @@ function useGameState() {
             captured: w.captured,
             loops: w.loops,
             sim: w.sim,
+            startPos: w.track[0],
           });
           if (d.walks.length > 100) d.walks.length = 100;
           log(
@@ -401,7 +407,7 @@ function useGameState() {
           }
           if (isNew) {
             log(d, 'kingdom', `Основано государство «${k.name}».`);
-            toast(d, 'Королевство основано', k.name);
+            toast(d, 'Королевство основано', k.name, 'found');
           }
         }),
 

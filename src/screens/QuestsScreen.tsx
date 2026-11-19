@@ -1,3 +1,5 @@
+import { sfx } from '../audio/sfx';
+import { SceneArt } from '../art/SceneArt';
 import { useState } from 'react';
 import { Bar, Icon } from '../components/ui';
 import { dayKey, streak } from '../game/achievements';
@@ -28,7 +30,10 @@ export function QuestsScreen() {
 
   return (
     <div className="screen">
-      <h1 className="screen-title">Задания</h1>
+      <div className="screen-hero">
+        <SceneArt id="quests" header />
+        <h1 className="screen-title">Задания</h1>
+      </div>
       <div className="muted" style={{ marginTop: 6 }}>
         {WEEKDAYS[now.getDay()]}, {now.getDate()} {MONTHS[now.getMonth()]}
       </div>
@@ -107,7 +112,10 @@ export function QuestsScreen() {
           const on = h.doneDates.includes(k);
           return (
             <div key={h.id} className="panel habit">
-              <button type="button" className="check" aria-pressed={on} aria-label={`${on ? 'Снять отметку' : 'Отметить'}: ${h.title}`} onClick={() => act.toggleHabit(h.id)}>
+              <button type="button" className="check" aria-pressed={on} aria-label={`${on ? 'Снять отметку' : 'Отметить'}: ${h.title}`} onClick={() => {
+                if (!on) sfx.play('quest');
+                act.toggleHabit(h.id);
+              }}>
                 <span>{on && <Icon name="check" size={16} />}</span>
               </button>
               <div className={on ? 'done-text' : ''} style={{ flex: 1, fontWeight: 600 }}>

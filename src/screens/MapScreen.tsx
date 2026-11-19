@@ -1,3 +1,4 @@
+import { sfx } from '../audio/sfx';
 import L from 'leaflet';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { pixelize } from '../game/pixelLand';
@@ -306,7 +307,10 @@ function IdlePanel({ todayM, goal }: { todayM: number; goal: number }) {
       <div style={{ margin: '10px 0 14px' }}>
         <Bar value={todayM / goal} />
       </div>
-      <button type="button" className="btn btn-gold btn-big" onClick={() => act.startWalk(s.settings.simulate)}>
+      <button type="button" className="btn btn-gold btn-big" onClick={() => {
+          sfx.play('march');
+          act.startWalk(s.settings.simulate);
+        }}>
         <Icon name="play" size={18} />
         {s.settings.simulate ? 'Тестовый поход' : 'В поход'}
       </button>
@@ -384,17 +388,26 @@ function WalkPanel() {
       )}
       <div className="row" style={{ marginTop: 12 }}>
         {w.pausedAt ? (
-          <button type="button" className="btn" style={{ flex: 1 }} onClick={act.resumeWalk}>
+          <button type="button" className="btn" style={{ flex: 1 }} onClick={() => {
+            sfx.play('resume');
+            act.resumeWalk();
+          }}>
             <Icon name="play" size={16} />
             Дальше
           </button>
         ) : (
-          <button type="button" className="btn" style={{ flex: 1 }} onClick={act.pauseWalk}>
+          <button type="button" className="btn" style={{ flex: 1 }} onClick={() => {
+            sfx.play('pause');
+            act.pauseWalk();
+          }}>
             <Icon name="pause" size={16} />
             Привал
           </button>
         )}
-        <button type="button" className="btn btn-gold" style={{ flex: 1.4 }} onClick={act.finishWalk}>
+        <button type="button" className="btn btn-gold" style={{ flex: 1.4 }} onClick={() => {
+          sfx.play('finish');
+          act.finishWalk();
+        }}>
           Завершить
         </button>
       </div>

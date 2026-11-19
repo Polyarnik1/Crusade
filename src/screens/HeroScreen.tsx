@@ -1,3 +1,4 @@
+import { SceneArt } from '../art/SceneArt';
 import { useState } from 'react';
 import { Banner, Tower } from '../art/heraldry';
 import { Pixel } from '../art/Pixel';
@@ -23,15 +24,18 @@ export function HeroScreen({ onSettings }: { onSettings: () => void }) {
 
   return (
     <div className="screen">
-      <div className="row between">
-        <div className="label">Герой</div>
-        <button type="button" className="btn btn-icon" onClick={onSettings} aria-label="Настройки">
+      <div className="screen-hero">
+        <SceneArt id="hero" header />
+        <div className="label" style={{ position: 'absolute', left: 16, top: 16, textShadow: '0 2px 0 #000' }}>
+          Герой
+        </div>
+        <button type="button" className="btn btn-icon" style={{ position: 'absolute', right: 12, top: 10 }} onClick={onSettings} aria-label="Настройки">
           <Icon name="gear" size={22} />
         </button>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginTop: 4 }}>
-        <div style={{ padding: 10, background: 'var(--panel)', border: '3px solid var(--line)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginTop: -64, position: 'relative' }}>
+        <div style={{ padding: 10, background: 'var(--panel)', border: '3px solid var(--line)', boxShadow: '0 4px 0 #000a' }}>
           {k ? <Banner banner={k.banner} size={84} /> : <Pixel grid={REGALIA_ART.couch} size={96} />}
         </div>
         <NameField value={s.hero.name} onSave={(name) => act.setHero({ name })} />

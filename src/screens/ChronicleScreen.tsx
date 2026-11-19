@@ -1,3 +1,4 @@
+import { SceneArt } from '../art/SceneArt';
 import { Icon } from '../components/ui';
 import { formatKm } from '../game/geo';
 import { useGame } from '../game/store';
@@ -29,7 +30,10 @@ export function ChronicleScreen() {
   const totalKm = formatKm(s.totalDistance);
   return (
     <div className="screen">
-      <h1 className="screen-title">Летопись</h1>
+      <div className="screen-hero">
+        <SceneArt id="chronicle" header />
+        <h1 className="screen-title">Летопись</h1>
+      </div>
       <p className="muted" style={{ margin: '8px 0 0', lineHeight: 1.45, fontSize: 14 }}>
         Здесь записано всё, что ты совершил. Скоро рядом откроется таверна — лента, где можно хвастаться и щитпостить.
       </p>

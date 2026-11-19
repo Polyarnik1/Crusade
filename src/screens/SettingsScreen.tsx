@@ -1,3 +1,4 @@
+import { sfx } from '../audio/sfx';
 import { useRef, useState } from 'react';
 import { Tower } from '../art/heraldry';
 import { Pixel } from '../art/Pixel';
@@ -53,7 +54,36 @@ export function SettingsScreen({ onBack }: { onBack: () => void }) {
         <Row title="Красный контур у соседей" hint="Земли соседей всегда подсвечены их цветом, контур — по желанию">
           <Switch on={st.redBorders} onChange={(v) => act.setSettings({ redBorders: v })} label="Красный контур у соседей" />
         </Row>
-        <Row title="Подложка карты" hint="«Авто» сама находит рабочий источник. Если карта не грузится — выбери другой">
+        <Row title="Звуки" hint="Колокола, рог и барабаны на захватах, регалиях и походах">
+          <Switch on={st.sound} onChange={(v) => act.setSettings({ sound: v })} label="Звуки" />
+        </Row>
+        {st.sound && (
+          <Row title="Громкость" stack>
+            <div className="chips" style={{ marginTop: 8 }}>
+              {(
+                [
+                  [0.35, 'Тихо'],
+                  [0.7, 'Средне'],
+                  [1, 'Громко'],
+                ] as const
+              ).map(([v, name]) => (
+                <button
+                  key={v}
+                  type="button"
+                  className={'chip' + (Math.abs(st.volume - v) < 0.01 ? ' on' : '')}
+                  onClick={() => {
+                    act.setSettings({ volume: v });
+                    sfx.setVolume(v);
+                    sfx.play('quest');
+                  }}
+                >
+                  {name}
+                </button>
+              ))}
+            </div>
+          </Row>
+        )}
+        <Row stack title="Подложка карты" hint="«Авто» сама находит рабочий источник. Если карта не грузится — выбери другой">
           <div className="chips" style={{ marginTop: 8 }}>
             {(Object.keys(SOURCE_LABEL) as MapSource[]).map((m) => (
               <button key={m} type="button" className={'chip' + (st.mapSource === m ? ' on' : '')} onClick={() => act.setSettings({ mapSource: m })}>
@@ -207,9 +237,9 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
   );
 }
 
-function Row({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
+function Row({ title, hint, children, stack }: { title: string; hint?: string; children: React.ReactNode; stack?: boolean }) {
   return (
-    <div className="row" style={{ padding: '6px 0', alignItems: 'center' }}>
+    <div className={stack ? '' : 'row'} style={{ padding: '6px 0', alignItems: 'center' }}>
       <div style={{ flex: 1 }}>
         <div style={{ fontWeight: 600 }}>{title}</div>
         {hint && (

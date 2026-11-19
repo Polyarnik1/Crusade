@@ -38,6 +38,7 @@ export interface WalkRecord {
   captured: number; // м²
   loops: number;
   sim: boolean;
+  startPos?: LatLng;
 }
 
 export interface ActiveWalk {
@@ -73,6 +74,7 @@ export interface Toast {
   id: string;
   title: string;
   text?: string;
+  sound?: import('../audio/sfx').SfxName;
 }
 
 export interface Settings {
@@ -84,6 +86,8 @@ export interface Settings {
   dailyGoalKm: number;
   simulate: boolean;
   mapSource: 'auto' | 'osm' | 'osmfr' | 'carto';
+  sound: boolean;
+  volume: number; // 0..1
 }
 
 export interface Flags {
@@ -93,6 +97,8 @@ export interface Flags {
   changedBanner: boolean;
   patron: boolean;
   exiled?: boolean; // правитель в изгнании: своих земель нет
+  everExiled?: boolean;
+  returned?: boolean;
 }
 
 export interface Hero {

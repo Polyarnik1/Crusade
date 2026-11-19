@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { sfx } from './audio/sfx';
 import { TabBar, Toasts, type Tab } from './components/ui';
 import { REGALIA } from './game/achievements';
 import { useGame } from './game/store';
@@ -20,6 +21,11 @@ export function App() {
   useEffect(() => {
     act.markOpened();
   }, [act]);
+
+  useEffect(() => {
+    sfx.enabled = s.settings.sound;
+    sfx.setVolume(s.settings.volume);
+  }, [s.settings.sound, s.settings.volume]);
 
   // во время похода держим карту на экране
   useEffect(() => {

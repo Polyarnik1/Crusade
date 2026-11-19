@@ -1,3 +1,4 @@
+import { sfx, type SfxName } from '../audio/sfx';
 import { useEffect, type ReactNode } from 'react';
 import { Pixel } from '../art/Pixel';
 import { useGame } from '../game/store';
@@ -56,6 +57,10 @@ export function Sheet({
   label: string;
 }) {
   useEffect(() => {
+    if (!center) sfx.play('open');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -80,13 +85,17 @@ export function Toasts() {
   return (
     <div className="toasts" aria-live="polite">
       {s.ui.toasts.map((t) => (
-        <ToastItem key={t.id} id={t.id} title={t.title} text={t.text} onDone={act.dismissToast} />
+        <ToastItem key={t.id} id={t.id} title={t.title} text={t.text} sound={t.sound} onDone={act.dismissToast} />
       ))}
     </div>
   );
 }
 
-function ToastItem({ id, title, text, onDone }: { id: string; title: string; text?: string; onDone: (id: string) => void }) {
+function ToastItem({ id, title, text, sound, onDone }: { id: string; title: string; text?: string; sound?: SfxName; onDone: (id: string) => void }) {
+  useEffect(() => {
+    sfx.play(sound ?? 'toast');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
   useEffect(() => {
     const h = window.setTimeout(() => onDone(id), 2800);
     return () => window.clearTimeout(h);
@@ -118,7 +127,10 @@ export function TabBar({ tab, onTab, dots }: { tab: Tab; onTab: (t: Tab) => void
           type="button"
           className={'tab' + (tab === t.id ? ' on' : '')}
           aria-current={tab === t.id ? 'page' : undefined}
-          onClick={() => onTab(t.id)}
+          onClick={() => {
+            if (t.id !== tab) sfx.play('tap');
+            onTab(t.id);
+          }}
         >
           <Icon name={t.icon} size={24} />
           {t.name}

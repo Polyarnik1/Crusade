@@ -49,6 +49,44 @@ export function streak(s: GameState): number {
   return n;
 }
 
+const DAY = 86400000;
+
+/** Фаза луны 0..1 (0 — новолуние, 0.5 — полнолуние). Точности до суток хватает. */
+export function moonPhase(ts: number): number {
+  const ref = Date.UTC(2000, 0, 6, 18, 14); // известное новолуние
+  const syn = 29.530588853 * DAY;
+  return ((((ts - ref) % syn) + syn) % syn) / syn;
+}
+const isNight = (ts: number) => hourOf(ts) >= 21 || hourOf(ts) < 5;
+const fullMoonNight = (ts: number) => isNight(ts) && Math.abs(moonPhase(ts) - 0.5) < 0.035;
+const dateIs = (ts: number, m: number, days: number[]) => {
+  const d = new Date(ts);
+  return d.getMonth() === m && days.includes(d.getDate());
+};
+/** Самый долгий перерыв между походами, в днях. */
+const longestBreak = (s: GameState) => {
+  const w = [...s.walks].sort((a, b) => a.startedAt - b.startedAt);
+  let best = 0;
+  for (let i = 1; i < w.length; i++) best = Math.max(best, (w[i].startedAt - w[i - 1].endedAt) / DAY);
+  return best;
+};
+/** Самый дальний поход от места самого первого (км). */
+const farthest = (s: GameState) => {
+  const w = s.walks.filter((x) => x.startPos);
+  if (w.length < 2) return 0;
+  const first = w.reduce((a, b) => (a.startedAt < b.startedAt ? a : b)).startPos!;
+  let best = 0;
+  for (const x of w) {
+    const [la1, lo1] = first;
+    const [la2, lo2] = x.startPos!;
+    const k = Math.PI / 180;
+    const dx = (lo2 - lo1) * k * Math.cos(((la1 + la2) / 2) * k);
+    const dy = (la2 - la1) * k;
+    best = Math.max(best, Math.hypot(dx, dy) * 6371);
+  }
+  return best;
+};
+
 const couchDays = (s: GameState) =>
   Object.values(s.days).filter((d) => d.opened && d.walkedM === 0).length;
 
@@ -203,6 +241,147 @@ export const REGALIA: Regalia[] = [
     kind: 'deed',
     check: (s) => titleOf(s.glory).level >= 5,
     progress: (s) => [Math.min(1400, s.glory), 1400],
+  },
+  {
+    id: 'robin',
+    name: 'Храбрый сэр Робин',
+    how: 'Выйти в поход и вернуться меньше чем через минуту',
+    quote: 'Когда опасность подступила вплотную, храбрый сэр Робин храбро развернулся.',
+    rarity: 'common',
+    kind: 'curio',
+    check: (s) => s.walks.some((w) => !w.sim && w.endedAt - w.startedAt < 60000 && w.distance < 30),
+  },
+  {
+    id: 'exile',
+    name: 'Вы пали',
+    how: 'Лишиться всех земель и стать правителем в изгнании',
+    quote: 'Большими красными буквами: ВЫ ПАЛИ. Мелкими, внизу: встань и иди.',
+    rarity: 'rare',
+    kind: 'curio',
+    check: (s) => !!s.flags.everExiled,
+  },
+  {
+    id: 'return_king',
+    name: 'Возвращение короля',
+    how: 'Вернуть себе землю после изгнания',
+    quote: 'Без короны, без свиты, без плаща. Но с картой и в удобной обуви.',
+    rarity: 'epic',
+    kind: 'deed',
+    check: (s) => !!s.flags.returned,
+  },
+  {
+    id: 'arrow_knee',
+    name: 'Стрела в колене',
+    how: 'Вернуться в поход после перерыва в две недели и больше',
+    quote: 'Раньше и я был искателем приключений. Потом диван. А теперь — снова.',
+    rarity: 'rare',
+    kind: 'curio',
+    check: (s) => longestBreak(s) >= 14,
+  },
+  {
+    id: 'full_moon',
+    name: 'Полнолуние',
+    how: 'Выйти в поход ночью в полнолуние',
+    quote: 'Держись дороги и обходи пустоши. Говорили же. Но кто их слушает.',
+    rarity: 'epic',
+    kind: 'curio',
+    check: (s) => s.walks.some((w) => fullMoonNight(w.startedAt)),
+  },
+  {
+    id: 'friday13',
+    name: 'Пятница, тринадцатое',
+    how: 'Выйти в поход в пятницу, 13-го',
+    quote: 'Чёрный кот перебежал тебе дорогу. Ты перебежал её обратно и забрал квартал.',
+    rarity: 'epic',
+    kind: 'curio',
+    check: (s) => s.walks.some((w) => new Date(w.startedAt).getDate() === 13 && new Date(w.startedAt).getDay() === 5),
+  },
+  {
+    id: 'solstice',
+    name: 'Хвала солнцу',
+    how: 'Выйти в поход в день солнцестояния — 21 июня или 21 декабря',
+    quote: 'Встань, вскинь руки к небу буквой V. Солнце не ответит, но день засчитан.',
+    rarity: 'epic',
+    kind: 'curio',
+    check: (s) => s.walks.some((w) => dateIs(w.startedAt, 5, [20, 21, 22]) || dateIs(w.startedAt, 11, [20, 21, 22])),
+  },
+  {
+    id: 'new_year',
+    name: 'Новогодний дозор',
+    how: 'Выйти в поход 31 декабря или 1 января',
+    quote: 'Пока страна режет оливье, ты режешь новые границы.',
+    rarity: 'rare',
+    kind: 'curio',
+    check: (s) => s.walks.some((w) => dateIs(w.startedAt, 11, [31]) || dateIs(w.startedAt, 0, [1])),
+  },
+  {
+    id: 'triple',
+    name: 'Пришёл, увидел, захватил',
+    how: 'Захватить три удела за один поход',
+    quote: 'Цезарь управился за три слова. Тебе хватило трёх петель.',
+    rarity: 'rare',
+    kind: 'deed',
+    check: (s) => s.walks.some((w) => w.loops >= 3),
+    progress: (s) => [Math.min(3, Math.max(0, ...s.walks.map((w) => w.loops))), 3],
+  },
+  {
+    id: 'hectares',
+    name: 'Помещик',
+    how: 'Владеть землёй площадью 10 гектаров',
+    quote: 'Десять гектаров. Ещё немного — и придётся нанимать управляющего.',
+    rarity: 'rare',
+    kind: 'deed',
+    check: (s) => s.totalArea >= 100000,
+    progress: (s) => [Math.floor(Math.min(100000, s.totalArea) / 10000), 10],
+  },
+  {
+    id: 'suzerain',
+    name: 'Сюзерен',
+    how: 'Захватить 50 уделов',
+    quote: 'Вассал моего вассала — не мой вассал. А вот эти пятьдесят дворов — точно мои.',
+    rarity: 'legendary',
+    kind: 'deed',
+    check: (s) => s.captures >= 50,
+    progress: (s) => [Math.min(50, s.captures), 50],
+  },
+  {
+    id: 'hundred',
+    name: 'Сто вёрст не крюк',
+    how: 'Пройти 100 км за всё время',
+    quote: 'Для бешеной собаки семь вёрст не крюк. Для рыцаря и сотня — разминка.',
+    rarity: 'epic',
+    kind: 'deed',
+    check: (s) => s.totalDistance >= 100000,
+    progress: (s) => [Math.floor(Math.min(100000, s.totalDistance) / 1000), 100],
+  },
+  {
+    id: 'mordor',
+    name: 'Пешком до Мордора',
+    how: 'Пройти 500 км за всё время',
+    quote: 'Нельзя просто так взять и дойти до Мордора. Ты не просто так. Ты пятьсот километров так.',
+    rarity: 'legendary',
+    kind: 'deed',
+    check: (s) => s.totalDistance >= 500000,
+    progress: (s) => [Math.floor(Math.min(500000, s.totalDistance) / 1000), 500],
+  },
+  {
+    id: 'far_land',
+    name: 'За тридевять земель',
+    how: 'Выйти в поход в 50 км от места своего первого похода',
+    quote: 'В тридевятом царстве, в тридесятом государстве — и там теперь знают твоё знамя.',
+    rarity: 'epic',
+    kind: 'deed',
+    check: (s) => farthest(s) >= 50,
+  },
+  {
+    id: 'fire_keeper',
+    name: 'Хранитель огня',
+    how: 'Месяц подряд выполнять задания или гулять от 500 м',
+    quote: 'Пламя угасает у всех. У тебя — нет. Тридцать дней ты подкидывал в него шаги.',
+    rarity: 'legendary',
+    kind: 'deed',
+    check: (s) => streak(s) >= 30,
+    progress: (s) => [Math.min(30, streak(s)), 30],
   },
   {
     id: 'patron',
