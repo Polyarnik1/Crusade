@@ -110,7 +110,7 @@ function alpha(p: P, fx: Fx, t: number): number {
 function usePixelParticles(ref: React.RefObject<HTMLCanvasElement>, fx: Fx, m: SceneMeta, on: boolean) {
   useEffect(() => {
     const cv = ref.current;
-    if (!cv || fx === 'none' || !on) return;
+    if (!cv || (fx === 'none' && !m.glow) || !on) return;
     const ctx = cv.getContext('2d');
     if (!ctx) return;
     const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -159,6 +159,22 @@ function usePixelParticles(ref: React.RefObject<HTMLCanvasElement>, fx: Fx, m: S
           ctx.fillRect(px, py + k, k, k);
         }
       }
+      // свечение из смотровой щели: вспышка раз в полторы секунды
+      if (m.glow) {
+        const ph = t % 1.5;
+        if (ph < 0.5) {
+          const a = Math.sin((ph / 0.5) * Math.PI);
+          const [gx, gy, gw, gh] = m.glow;
+          ctx.fillStyle = '#ffffff';
+          ctx.globalAlpha = a * 0.3;
+          ctx.fillRect((gx - 1) * k, (gy - 1) * k, (gw + 2) * k, (gh + 2) * k);
+          ctx.globalAlpha = a * 0.15;
+          ctx.fillRect((gx - 2) * k, gy * k, (gw + 4) * k, gh * k);
+          ctx.globalAlpha = a;
+          ctx.fillStyle = '#f4f8ff';
+          ctx.fillRect(gx * k, gy * k, gw * k, gh * k);
+        }
+      }
       ctx.globalAlpha = 1;
       if (reduce) cancelAnimationFrame(raf);
     };
@@ -205,7 +221,7 @@ export function SceneArt({ id, header, animate = true, dim, className, style, ch
   );
 }
 
-/** Статичная миниатюра: сцена в целом масштабе ×2, обрезанная по центру. */
+/** Статичная миниатюра: сцена 1:1, обрезанная по центру. */
 export function SceneThumb({ id, dim }: { id: string; dim?: boolean }) {
   const img = SCENE_IMG[id];
   const m = SCENE_META[id];
@@ -213,7 +229,7 @@ export function SceneThumb({ id, dim }: { id: string; dim?: boolean }) {
   return (
     <div
       className={'scene-thumb' + (dim ? ' scene--dim' : '')}
-      style={{ backgroundImage: `url(${img})`, backgroundSize: `${m.w * 2}px ${m.h * 2}px` }}
+      style={{ backgroundImage: `url(${img})`, backgroundSize: `max(100%, ${m.w}px) auto` }}
       aria-hidden="true"
     />
   );

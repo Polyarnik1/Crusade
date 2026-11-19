@@ -41,6 +41,36 @@ function range(s: Scene2, base: number, amp: number, o: { seed?: number; snow?: 
   if (o.near !== false) s.peaks({ base, amp: amp * 0.6, freq: 0.03, m: M.MTN, seed: o.seed, haze: 0.05, lift: 0.26, snowLine: o.snow === false ? 0 : base - amp * 0.45 });
 }
 
+function wolfHowl(s: Scene2, x: number, y: number, k: number) {
+  const P: [number, number][] = [
+    [-16, 0], [-12, -2], [-10, -6], [-10, -12], [-8, -17], [-5, -21], [-3, -25], [-1, -29], [0, -33], [1, -36],
+    [2, -40], [3.5, -37.5], [5, -41.5], [6, -37.5], [9, -39], [13, -43], [14, -42], [12, -39.5], [10, -37], [7.5, -34],
+    [7, -29], [6, -23], [6.5, -14], [6.5, -2], [9, 0], [3, 0], [3, -8], [1, -5], [1.5, 0], [-7, 0],
+  ];
+  const pts = P.map(([a, b]) => [x + a * k, y + b * k] as [number, number]);
+  const mark = new Set<number>();
+  const ys = pts.map((p) => p[1]);
+  for (let yy = Math.floor(Math.min(...ys)); yy <= Math.max(...ys); yy++) {
+    const hits: number[] = [];
+    for (let i = 0; i < pts.length; i++) {
+      const [ax, ay] = pts[i];
+      const [bx, by] = pts[(i + 1) % pts.length];
+      if (ay <= yy + 0.5 !== by <= yy + 0.5) hits.push(ax + ((yy + 0.5 - ay) / (by - ay)) * (bx - ax));
+    }
+    hits.sort((a, b) => a - b);
+    for (let j = 0; j + 1 < hits.length; j += 2) for (let xx = Math.ceil(hits[j] - 0.5); xx < hits[j + 1] - 0.5; xx++) mark.add(yy * 1000 + xx);
+  }
+  for (const key of mark) {
+    const yy = Math.floor(key / 1000);
+    const xx = key - yy * 1000;
+    const edge = [[1, 0], [-1, 0], [0, -1], [0, 1]].some(([dx, dy]) => !mark.has((yy + dy) * 1000 + xx + dx));
+    const fur = hash(xx, yy, 5) > 0.7;
+    s.put(xx, yy, M.METAL, edge ? 0.55 + hash(xx, yy, 2) * 0.2 : fur ? 0.1 : 0.05);
+  }
+  // шерсть по загривку
+  for (let i = 0; i < 10; i++) s.put(x + (-6 + i * 0.6) * k, y + (-18 - i * 1.2) * k - 1, M.METAL, 0.5);
+}
+
 const folds2 = (x: number, y: number) => Math.sin(x * 0.9 + y * 0.1) * 0.08;
 
 export const SCENES2: Record<string, Def2> = {
@@ -65,31 +95,35 @@ export const SCENES2: Record<string, Def2> = {
   },
   first_land: {
     draw: (s) => {
-      night(s, 128, 20, 12, { clouds: [36, 52, 0.45] });
-      range(s, 68, 34, { seed: 3 });
-      s.fog(62, 5, 0.6);
-      s.pines(72, { x0: -4, x1: 50, hMin: 12, hMax: 20, snow: true });
-      s.pines(74, { x0: 118, x1: 166, hMin: 12, hMax: 22, snow: true });
-      rockyGround(s, (x) => 98 - 22 * Math.exp(-Math.pow((x - 80) / 34, 2)), M.SNOW, 40);
-      // знамя, воткнутое в снег
-      s.cap(98, 36, 98, 80, 0.8, 0.8, M.WOOD, 0.45);
-      s.poly([[99, 37], [118, 39], [114, 44], [119, 50], [99, 49]], M.RED, 0.42, { tex: (x, y) => Math.sin(x * 0.6) * 0.08, flat: 0.5 });
-      s.ell(108, 43, 2.2, 2.2, M.GOLD, 0.6);
-      knightStand(s, 76, 81, 0.95, { sword: true });
+      night(s, 132, 18, 11, { clouds: [30, 46, 0.45] });
+      range(s, 70, 34, { seed: 3 });
+      s.fog(66, 5, 0.6);
+      s.pines(78, { x0: -4, x1: 34, hMin: 14, hMax: 22, snow: true });
+      s.pines(80, { x0: 128, x1: 166, hMin: 14, hMax: 24, snow: true });
+      rockyGround(s, (x) => 86 + Math.sin(x * 0.05) * 2, M.SNOW, 26);
+      // знамя за плечом
+      s.cap(110, 20, 110, 100, 1.1, 1.1, M.WOOD, 0.45);
+      s.ell(110, 19, 1.8, 1.8, M.GOLD, 0.65);
+      s.poly([[111, 22], [136, 24], [131, 32], [137, 40], [111, 38]], M.RED, 0.42, { tex: (x, y) => Math.sin(x * 0.5 + y * 0.1) * 0.1, flat: 0.45 });
+      s.ell(123, 31, 3, 3, M.GOLD, 0.6);
+      // рыцарь крупным планом: в кадре по колено
+      knightStand(s, 74, 122, 1.75, { sword: true });
     },
   },
   full_moon: {
     draw: (s) => {
-      s.sky('deep', 72);
-      s.bigMoon(80, 40, 28, { halo: 0.45 });
-      s.stars(90, 60);
-      s.clouds(56, 72, { cover: 0.4, sx: 0.025 });
-      s.ridge({ base: 84, amp: 10, freq: 0.04, m: M.MTN_FAR, haze: 0.2 });
-      rockyGround(s, (x) => 90 + Math.sin(x * 0.06) * 2, M.GROUND, 30);
-      // скала с волком
-      s.poly([[96, 100], [104, 74], [118, 66], [134, 70], [148, 84], [160, 88], [160, 100]], M.MTN, 0.3, { tex: rockTex(8), flat: 0.2, tilt: [-0.3, -0.3] });
-      wolf(s, 122, 68, 1.05, 1);
-      s.deadTree(26, 92, 18, -Math.PI / 2 + 0.1, 6);
+      s.sky('deep', 70);
+      s.stars(110, 60);
+      s.bigMoon(104, 40, 30, { halo: 0.5 });
+      s.clouds(46, 58, { cover: 0.35, sx: 0.03, sy: 0.18 });
+      // лес в тумане, два слоя
+      s.pines(80, { x0: -4, x1: 168, hMin: 14, hMax: 22, gap: [4, 8], m: M.MTN_FAR, lift: 0.18 });
+      s.fog(80, 6, 0.9);
+      s.pines(92, { x0: -4, x1: 90, hMin: 22, hMax: 34, gap: [7, 13], lift: -0.05 });
+      s.fog(96, 4, 0.5, { seed: 3 });
+      // скала на фоне луны и воющий волк — силуэт с серебряным контуром
+      s.poly([[70, 100], [80, 82], [92, 72], [106, 66], [124, 64], [140, 70], [154, 82], [160, 86], [160, 100]], M.MTN, 0.12, { tex: rockTex(8), flat: 0.6 });
+      wolfHowl(s, 112, 65, 1);
     },
   },
   couch: {
@@ -155,13 +189,25 @@ Object.assign(SCENES2, {
     draw: (s: Scene2) => {
       dusk(s, 30, 74, 9);
       range(s, 76, 18, { seed: 2, snow: false });
-      s.hill((x) => 74 - 16 * Math.exp(-Math.pow((x - 104) / 34, 2)), M.GROUND, { lift: 0.22 });
-      s.castle(104, 58, 1.35, { win: 0.5, flag: M.RED });
-      s.pines(80, { x0: -4, x1: 56, hMin: 10, hMax: 18 });
+      // скальное плато, на котором стоит замок
+      s.hill((x) => {
+        const d = Math.abs(x - 104);
+        return d < 26 ? 60 + (hash(x, 1, 3) - 0.5) * 1.2 : 60 + Math.pow(d - 26, 1.25) * 0.55;
+      }, M.MTN, { lift: 0.24, tex: 0.35 });
+      s.poly([[78, 60], [130, 60], [136, 76], [72, 76]], M.MTN, 0.24, { tex: rockTex(6), flat: 0.3, tilt: [0.2, -0.2] });
+      s.castle(104, 60, 1.35, { win: 0.5, flag: M.RED });
+      // дорога к воротам
+      for (let y = 61; y < 92; y++) {
+        const t = (y - 61) / 31;
+        const cx = 104 - t * 46 + Math.sin(t * 4) * 6;
+        for (let x = Math.round(cx - 1 - t * 4); x <= cx + 1 + t * 4; x++) s.putN(x, y, M.GROUND, 0.46, 0, -0.5);
+      }
+      s.pines(82, { x0: -4, x1: 40, hMin: 10, hMax: 18 });
       rockyGround(s, (x) => 90 + Math.sin(x * 0.07) * 1.5, M.GROUND, 30);
       knightStand(s, 44, 97, 0.85, { sword: true, f: 1 });
     },
   },
+
   streak7: {
     draw: (s: Scene2) => {
       dusk(s, 116, 66, 10, 'dawn');
@@ -400,21 +446,55 @@ Object.assign(SCENES2, {
   },
   arrow_knee: {
     draw: (s: Scene2) => {
-      s.room(78, { lift: 0.1 });
-      s.block(98, 34, 146, 82, M.STONE, { lift: 0.06 });
-      s.rect(106, 52, 138, 80, M.VOID, 0);
-      s.rect(94, 30, 150, 34, M.STONE, 0.42);
-      s.bigFire(122, 79, 5, { light: 9 });
-      s.rect(16, 64, 76, 67, M.WOOD, 0.45);
-      s.rect(22, 68, 25, 92, M.WOOD, 0.3);
-      s.rect(68, 68, 71, 92, M.WOOD, 0.3);
-      s.cap(36, 56, 36, 63, 3, 3, M.WOOD, 0.55, { flat: 0.3 });
-      s.rect(33, 55, 39, 56, M.SNOW, 0.75);
-      // щит со стрелой на стене
-      s.ell(58, 26, 9, 11, M.BLUE, 0.4);
-      s.cap(58, 15, 58, 37, 1.4, 1.4, M.GOLD, 0.5);
-      s.cap(40, 40, 78, 18, 0.5, 0.5, M.WOOD, 0.5);
-      s.poly([[76, 16], [80, 17], [78, 20]], M.RED, 0.5);
+      s.room(80, { lift: 0.14 });
+      // балки потолка и столбы
+      s.rect(0, 0, 160, 5, M.WOOD, 0.3);
+      for (const x of [6, 154]) s.block(x - 3, 0, x + 3, 80, M.WOOD, { brick: false, lift: 0.05 });
+      s.rect(0, 5, 160, 6, M.WOOD, 0.2);
+      // окно со снегом
+      s.windowView(22, 16, 40, 38, () => {
+        s.sky('night', 38);
+        s.moonDisk(34, 22, 3);
+        s.stars(12, 34);
+      });
+      // очаг справа
+      s.block(104, 30, 152, 84, M.STONE, { lift: 0.08 });
+      s.rect(100, 26, 156, 30, M.WOOD, 0.45);
+      s.rect(112, 54, 144, 82, M.VOID, 0);
+      s.bigFire(128, 81, 5, { light: 13 });
+      s.cap(118, 52, 138, 52, 0.6, 0.6, M.METAL, 0.4);
+      s.ell(128, 56, 4, 3.5, M.METAL, 0.3); // котелок
+      // на каминной полке
+      s.cap(108, 24, 108, 20, 1.2, 1.2, M.WOOD, 0.5);
+      s.candle(150, 26, 4);
+      // щит и меч на стене
+      s.ell(70, 22, 8, 10, M.BLUE, 0.4, { tex: (x, y) => (hash(x, y, 3) - 0.5) * 0.06 });
+      s.cap(70, 13, 70, 32, 1.2, 1.2, M.GOLD, 0.5);
+      s.cap(61, 22, 79, 22, 1.2, 1.2, M.GOLD, 0.5);
+      // фонарь на цепи
+      s.line(52, 6, 52, 14, M.METAL, 0.3);
+      s.rect(50, 15, 54, 20, M.METAL, 0.25);
+      s.put(52, 17, M.FIRE, 0.9);
+      s.light(52, 17, 22, 0.55);
+      // бочки
+      for (const [bx, by] of [[18, 86], [30, 88]] as const) {
+        s.ell(bx, by - 8, 6, 9, M.WOOD, 0.4, { tex: (x) => (x % 4 === 0 ? -0.08 : 0) });
+        s.rect(bx - 6, by - 13, bx + 6, by - 12, M.METAL, 0.35);
+        s.rect(bx - 6, by - 4, bx + 6, by - 3, M.METAL, 0.35);
+      }
+      // стол с кружкой и хлебом
+      s.rect(40, 72, 72, 75, M.WOOD, 0.5);
+      s.rect(44, 76, 46, 96, M.WOOD, 0.32);
+      s.rect(66, 76, 68, 96, M.WOOD, 0.32);
+      s.cap(50, 66, 50, 71, 2.6, 2.6, M.WOOD, 0.55, { flat: 0.3 });
+      s.rect(48, 65, 52, 66, M.SNOW, 0.8);
+      s.ell(61, 70, 4, 2.2, M.PARCH, 0.5);
+      // рыцарь у огня, стрела торчит из колена
+      knightSit(s, 86, 98, 0.95, { f: 1 });
+      s.cap(96, 82, 82, 66, 0.7, 0.7, M.PARCH, 0.8);
+      s.poly([[96, 82], [99, 83], [97, 85]], M.METAL, 0.6, { flat: 0.6 });
+      s.poly([[81, 63], [85, 66], [83, 69], [80, 67]], M.RED, 0.55, { flat: 0.6 });
+      s.poly([[79, 66], [82, 69], [80, 71]], M.RED, 0.45, { flat: 0.6 });
     },
   },
   friday13: {
@@ -550,3 +630,38 @@ Object.assign(SCENES2, {
     },
   },
 });
+
+// эффекты частиц, источники искр и «мигалка» в щели шлема
+export const FX2: Record<string, { fx: string; emit?: [number, number]; subject?: boolean; glow?: [number, number, number, number] }> = {
+  fire_keeper: { fx: 'embers', emit: [100, 84], subject: true },
+  first_land: { fx: 'snow', subject: true, glow: [73, 48, 9, 2] },
+  founder: { fx: 'dust' },
+  couch: { fx: 'dust', subject: true },
+  streak7: { fx: 'dust' },
+  night: { fx: 'stars' },
+  early: { fx: 'dust' },
+  circle: { fx: 'fireflies' },
+  winter: { fx: 'blizzard' },
+  chronicler: { fx: 'dust' },
+  architect: { fx: 'dust' },
+  herald: { fx: 'dust' },
+  border: { fx: 'snow' },
+  great_march: { fx: 'snow' },
+  wanderer: { fx: 'dust' },
+  lord: { fx: 'snow' },
+  glory: { fx: 'stars' },
+  patron: { fx: 'dust' },
+  robin: { fx: 'dust' },
+  exile: { fx: 'ash' },
+  return_king: { fx: 'dust' },
+  arrow_knee: { fx: 'embers', emit: [128, 76], subject: true },
+  full_moon: { fx: 'fireflies' },
+  friday13: { fx: 'fireflies' },
+  solstice: { fx: 'dust' },
+  triple: { fx: 'snow' },
+  hectares: { fx: 'fireflies' },
+  suzerain: { fx: 'embers', emit: [26, 54] },
+  hundred: { fx: 'blizzard' },
+  mordor: { fx: 'embers', emit: [80, 28] },
+  far_land: { fx: 'stars' },
+};
