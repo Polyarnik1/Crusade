@@ -6,7 +6,7 @@ import { attachTiles, type TileHandle } from '../art/tiles';
 import { Banner, towerSvg } from '../art/heraldry';
 import { Bar, Icon, Sheet } from '../components/ui';
 import { streak } from '../game/achievements';
-import { FORMS, colorHex } from '../game/cosmetics';
+import { FORMS, colorHex, kingdomTone } from '../game/cosmetics';
 import { dist, formatArea, formatKm, landArea, landCenter, towerSpots } from '../game/geo';
 import { titleOf } from '../game/levels';
 import { DEFAULT_CENTER, isExiled, useGame } from '../game/store';
@@ -232,7 +232,7 @@ export function MapScreen() {
 
       <div className="hud hud-top">
         <div className="panel row" style={{ padding: '10px 12px' }}>
-          <div className="lvl" aria-label={`Уровень ${t.level}`}>{t.level}</div>
+          <div className="lvl" style={kingdomTone(s.kingdom?.banner.color)} aria-label={`Уровень ${t.level}`}>{t.level}</div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="h2">{t.name}</div>
             <div style={{ margin: '6px 0 4px' }}>
@@ -314,7 +314,7 @@ function IdlePanel({ todayM, goal }: { todayM: number; goal: number }) {
       <div style={{ margin: '10px 0 14px' }}>
         <Bar value={todayM / goal} />
       </div>
-      <button type="button" className="btn btn-gold btn-big" onClick={() => {
+      <button type="button" className="btn btn-gold btn-big" style={kingdomTone(s.kingdom?.banner.color)} onClick={() => {
           sfx.play('march');
           act.startWalk(s.settings.simulate);
         }}>

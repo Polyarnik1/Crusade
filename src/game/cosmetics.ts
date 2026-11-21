@@ -96,6 +96,21 @@ export function colorHex(id: string): string {
   return COLORS.find((c) => c.id === id)?.hex ?? id;
 }
 
+function tint(hex: string, k: number): string {
+  const n = parseInt(hex.replace('#', '').padEnd(6, '0').slice(0, 6), 16);
+  const ch = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => Math.round(k >= 0 ? v + (255 - v) * k : v * (1 + k)));
+  return '#' + ch.map((v) => Math.max(0, Math.min(255, v)).toString(16).padStart(2, '0')).join('');
+}
+
+/** Цвет королевства для кнопок и плашек: фон, светлая и тёмная грани рамки, цвет надписи. */
+export function kingdomTone(colorId: string | undefined): { background: string; borderTopColor: string; borderLeftColor: string; borderRightColor: string; borderBottomColor: string; color: string } {
+  const hex = colorHex(colorId ?? 'gold');
+  const n = parseInt(hex.replace('#', '').padEnd(6, '0').slice(0, 6), 16);
+  const lum = (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+  const light = tint(hex, 0.32), dark = tint(hex, -0.45);
+  return { background: hex, borderTopColor: light, borderLeftColor: light, borderRightColor: dark, borderBottomColor: dark, color: lum > 0.55 ? '#0b0a10' : '#fff7e6' };
+}
+
 export function isOpen(item: Unlockable, regalia: number): boolean {
   return regalia >= item.need;
 }
