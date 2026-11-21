@@ -165,12 +165,14 @@ const HELM = [
 const HELM_COL: Record<string, string> = { K: '#14151c', w: '#ffffff', l: '#cdd1dd', m: '#8a90a4' };
 
 /** Шлем рыцаря с кнопки «В поход»: пиксель-арт автора, белый корпус с чёрным контуром. */
-export function CrusaderHelm({ size = 51 }: { size?: number }) {
+export function CrusaderHelm({ size = 40 }: { size?: number }) {
   return (
+    <span className="helm-glow" style={{ width: size }}>
     <svg width={size} height={(size * HELM.length) / 17} viewBox={`0 0 17 ${HELM.length}`} shapeRendering="crispEdges" aria-hidden="true" style={{ display: 'block' }}>
       {HELM.flatMap((row, y) =>
         [...row].map((c, x) => (c === '.' ? null : <rect key={`${x}-${y}`} x={x} y={y} width="1" height="1" fill={HELM_COL[c]} />)),
       )}
     </svg>
+    </span>
   );
 }
