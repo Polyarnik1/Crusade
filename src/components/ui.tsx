@@ -142,11 +142,10 @@ export function TabBar({ tab, onTab, dots }: { tab: Tab; onTab: (t: Tab) => void
 }
 
 const HELM = [
-  '....KKKKKKKK....',
-  '..KKllssssddKK..',
+  '..KKKKKKKKKKKK..',
   '..KllssssssddK..',
   '..KllssssssddK..',
-  '..KllssKKssddK..',
+  '..KllssssssddK..',
   '..KllssKKssddK..',
   '..KllssKKssddK..',
   '..KlKKKKKKKKdK..',
@@ -154,11 +153,12 @@ const HELM = [
   '..KllssKKssddK..',
   '..KllssKKssddK..',
   '..KllssKKssddK..',
+  '..KllssssssddK..',
   '..KllssssssddK..',
   '...KllssssddK...',
   '....KKKKKKKK....',
 ];
-const HELM_COL: Record<string, string> = { K: '#14151c', l: '#dcdee6', s: '#9a9da9', d: '#555863' };
+const HELM_COL: Record<string, string> = { K: '#14161f', l: '#dfe5f2', s: '#9aa4bf', d: '#566082' };
 
 /** Глухой топфхельм с крестообразной прорезью (горизонтальная щель низко, на уровне глаз). Без цвета. */
 export function CrusaderHelm({ size = 36 }: { size?: number }) {
