@@ -140,3 +140,33 @@ export function TabBar({ tab, onTab, dots }: { tab: Tab; onTab: (t: Tab) => void
     </nav>
   );
 }
+
+const HELM = [
+  '......rrrr......',
+  '....rrrrrrrr....',
+  '..KKKKKKKKKKKK..',
+  '..KllssssssddK..',
+  '..KllssssssddK..',
+  '..KllssKKssddK..',
+  '..KlKKKKKKKKdK..',
+  '..KlKKKKKKKKdK..',
+  '..KllssKKssddK..',
+  '..KllssKKssddK..',
+  '..KllssKKssddK..',
+  '..KllssKKssddK..',
+  '..KllssssssddK..',
+  '...KllssssddK...',
+  '....KKKKKKKK....',
+];
+const HELM_COL: Record<string, string> = { K: '#14161f', l: '#dfe5f2', s: '#9aa4bf', d: '#566082', r: '#b8433a' };
+
+/** Шлем крестоносца: глухой топфхельм с крестообразной прорезью и красным султаном. */
+export function CrusaderHelm({ size = 36 }: { size?: number }) {
+  return (
+    <svg width={size} height={(size * HELM.length) / 16} viewBox={`0 0 16 ${HELM.length}`} shapeRendering="crispEdges" aria-hidden="true" style={{ display: 'block' }}>
+      {HELM.flatMap((row, y) =>
+        [...row].map((c, x) => (c === '.' ? null : <rect key={`${x}-${y}`} x={x} y={y} width="1" height="1" fill={HELM_COL[c]} />)),
+      )}
+    </svg>
+  );
+}

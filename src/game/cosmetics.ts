@@ -103,6 +103,8 @@ function tint(hex: string, k: number): string {
 }
 
 /** Цвет королевства для кнопок и плашек: фон, светлая и тёмная грани рамки, цвет надписи. */
+export const WHITE_TONE = { background: '#f4f1ea', borderTopColor: '#ffffff', borderLeftColor: '#ffffff', borderRightColor: '#b3ad9c', borderBottomColor: '#b3ad9c', color: '#0b0a10' };
+
 export function kingdomTone(colorId: string | undefined): { background: string; borderTopColor: string; borderLeftColor: string; borderRightColor: string; borderBottomColor: string; color: string } {
   const hex = colorHex(colorId ?? 'gold');
   const n = parseInt(hex.replace('#', '').padEnd(6, '0').slice(0, 6), 16);

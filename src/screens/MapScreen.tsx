@@ -4,9 +4,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { pixelize } from '../game/pixelLand';
 import { attachTiles, type TileHandle } from '../art/tiles';
 import { Banner, towerSvg } from '../art/heraldry';
-import { Bar, Icon, Sheet } from '../components/ui';
+import { Bar, CrusaderHelm, Icon, Sheet } from '../components/ui';
 import { streak } from '../game/achievements';
-import { FORMS, colorHex, kingdomTone } from '../game/cosmetics';
+import { FORMS, WHITE_TONE, colorHex, kingdomTone } from '../game/cosmetics';
 import { dist, formatArea, formatKm, landArea, landCenter, towerSpots } from '../game/geo';
 import { titleOf } from '../game/levels';
 import { DEFAULT_CENTER, isExiled, useGame } from '../game/store';
@@ -314,12 +314,15 @@ function IdlePanel({ todayM, goal }: { todayM: number; goal: number }) {
       <div style={{ margin: '10px 0 14px' }}>
         <Bar value={todayM / goal} />
       </div>
-      <button type="button" className="btn btn-gold btn-big" style={kingdomTone(s.kingdom?.banner.color)} onClick={() => {
+      <button type="button" className={'btn btn-gold btn-big' + (s.kingdom ? '' : ' btn-glow')} style={s.kingdom ? kingdomTone(s.kingdom.banner.color) : WHITE_TONE} onClick={() => {
           sfx.play('march');
           act.startWalk(s.settings.simulate);
         }}>
-        <Icon name="play" size={18} />
-        {s.settings.simulate ? 'Тестовый поход' : 'В поход'}
+        {!s.kingdom && <CrusaderHelm size={46} />}
+        <span className="btn-row">
+          <Icon name="play" size={18} />
+          {s.settings.simulate ? 'Тестовый поход' : 'В поход'}
+        </span>
       </button>
       {!s.land && (
         <p className="muted" style={{ fontSize: 13, margin: '10px 0 0', lineHeight: 1.4 }}>
