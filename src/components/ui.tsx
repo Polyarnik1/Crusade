@@ -142,49 +142,32 @@ export function TabBar({ tab, onTab, dots }: { tab: Tab; onTab: (t: Tab) => void
 }
 
 const HELM = [
-  '.....KK77777777777777777KK......',
-  '...KK766767676666555544331KK....',
-  '..K7566666666656555544443321K...',
-  '..K7667676767666655554444331K...',
-  '..K7665656565655554544332321K...',
-  '..K7777877777777333333338333K...',
-  '..K5555155555555222222221222K...',
-  '..K7656666667544332154433231K...',
-  '..K766565656751KK12144332321K...',
-  '..K765666666751KK12144433231K...',
-  '..K766565856851KK12844332321K...',
-  '..K765666685151KK12144433231K...',
-  '..K766565656751KK12148332321K...',
-  '..K765656665751KK12184433231K...',
-  '..K766565656751KK12144332321K...',
-  '..K767777777771KK17777777771K...',
-  '..K7655833333313111111118551K...',
-  '..K76561KKKKKK1KK1KKKKKK1221K...',
-  '..K76556KKKKKK1KK1KKKKKK2221K...',
-  '..K76565KKKKKK1KK1KKKKKK3221K...',
-  '..K7655688888818515555552221K...',
-  '..K763383333331KK13333338331K...',
-  '..K762212222221KK12222221221K...',
-  '..K76565K5K5751KK1214K4K3221K...',
-  '..K765565K56851KK12834K32221K...',
-  '..K76565K5K5151KK1214K4K3221K...',
-  '..K765565K56751KK12134K32221K...',
-  '..K765656565751KK12143433221K...',
-  '...K77777777754433213333333K....',
-  '....K555585555552222228222K.....',
-  '.....K7651555555444433121K......',
-  '......K76565655554433231K.......',
-  '.......K765555554433221K........',
-  '........K7656555544331K.........',
-  '.........K76555544331K..........',
-  '..........KKKKKKKKKKK...........',
+  '....KKKKKKKKK....',
+  '...KKwwwwwwwKK...',
+  '..KKwwwwwwwwwKK..',
+  '.KKwwwwwKwwwwwKK.',
+  '.KwwwwwwKwwwwwlK.',
+  'KKwwwwwKKKwwwwwKK',
+  '.KwKKKKKKKKKKKlK.',
+  '.KwKKKKKKKKKKKlK.',
+  'KKwwwKKKKKKKwwwKK',
+  'KwwwKwwKKKwwKwwlK',
+  '.KwKwKwKKKwKwKlK.',
+  '.KwwKwwKKKwwKwlK.',
+  '.KwKwKwKKKwKwKlK.',
+  '..KwKwwKKKwwKlK..',
+  '..KwwKwKKKwKwlK..',
+  '..KKwwwKKKwwwKK..',
+  '....KKwwwwwKK....',
+  '.....KKwwwKK.....',
+  '......KKKKK......',
 ];
-const HELM_COL: Record<string, string> = { K: '#0e0f16', '1': '#1e2130', '2': '#363c54', '3': '#565f80', '4': '#7a86aa', '5': '#9eaacc', '6': '#bac4e0', '7': '#d6def0', '8': '#f4f7ff' };
+const HELM_COL: Record<string, string> = { K: '#14151c', w: '#ffffff', l: '#cdd1dd', m: '#8a90a4' };
 
-/** Закрытый топфхельм с крестообразной прорезью: усиливающие полосы, заклёпки, отверстия для дыхания. */
-export function CrusaderHelm({ size = 40 }: { size?: number }) {
+/** Шлем рыцаря с кнопки «В поход»: пиксель-арт автора, белый корпус с чёрным контуром. */
+export function CrusaderHelm({ size = 51 }: { size?: number }) {
   return (
-    <svg width={size} height={(size * HELM.length) / 32} viewBox={`0 0 32 ${HELM.length}`} shapeRendering="crispEdges" aria-hidden="true" style={{ display: 'block' }}>
+    <svg width={size} height={(size * HELM.length) / 17} viewBox={`0 0 17 ${HELM.length}`} shapeRendering="crispEdges" aria-hidden="true" style={{ display: 'block' }}>
       {HELM.flatMap((row, y) =>
         [...row].map((c, x) => (c === '.' ? null : <rect key={`${x}-${y}`} x={x} y={y} width="1" height="1" fill={HELM_COL[c]} />)),
       )}
