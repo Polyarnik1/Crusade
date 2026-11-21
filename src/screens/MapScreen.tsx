@@ -318,7 +318,7 @@ function IdlePanel({ todayM, goal }: { todayM: number; goal: number }) {
           sfx.play('march');
           act.startWalk(s.settings.simulate);
         }}>
-        {!s.kingdom && <CrusaderHelm size={38} />}
+        {!s.kingdom && <CrusaderHelm size={36} />}
         <span className="btn-row">
           <Icon name="play" size={18} />
           {s.settings.simulate ? 'Тестовый поход' : 'В поход'}
