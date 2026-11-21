@@ -142,28 +142,44 @@ export function TabBar({ tab, onTab, dots }: { tab: Tab; onTab: (t: Tab) => void
 }
 
 const HELM = [
-  '......rrrr......',
-  '....rrrrrrrr....',
-  '..KKKKKKKKKKKK..',
-  '..KllssssssddK..',
-  '..KllssssssddK..',
-  '..KllssKKssddK..',
-  '..KlKKKKKKKKdK..',
-  '..KlKKKKKKKKdK..',
-  '..KllssKKssddK..',
-  '..KllssKKssddK..',
-  '..KllssKKssddK..',
-  '..KllssKKssddK..',
-  '..KllssssssddK..',
-  '...KllssssddK...',
-  '....KKKKKKKK....',
+  '......KK2334K443KK......',
+  '.....K233335244443K.....',
+  '....K23333352444443K....',
+  '...K2355333524455543K...',
+  '..K235533335244455543K..',
+  '..K235333335244455543K..',
+  '.K23553333352444455543K.',
+  '.K23553333352444444443K.',
+  '.K23553333352444444443K.',
+  '.K23333333352444444443K.',
+  '.KKKKKKKKKKKKKKKKKKKKKK.',
+  'K5555555555555555555555K',
+  'K35333333333334333333533',
+  'K2222222222222222222222K',
+  '.KKKKKKKKKKKKKKKKKKKKKK.',
+  '..KBBBBBBBBBBBBBBBBBBK..',
+  '..KBBBBBBBBBBBBBBBBBBK..',
+  '...KBBBBBBBBBBBBBBBBK...',
+  '..K322222225344444445K..',
+  '..K3B2B2B225344B4B4B5K..',
+  '.KKKB2B2B22534B4B4B5KKK.',
+  'K1212B2B2B2534B4B4B1212K',
+  '.K1213B2B2B534B4B4B212K.',
+  '.K2121B2B2B53B4B4B2121K.',
+  '.K12123322253444551212K.',
+  'KK21212322253444512121KK',
+  '555552123225344512145444',
+  '333335555555444454422222',
+  'KKKKK33333332222222KKKKK',
+  '.....KKKKKKKKKKKKKK.....',
+  '........................',
 ];
-const HELM_COL: Record<string, string> = { K: '#14161f', l: '#dfe5f2', s: '#9aa4bf', d: '#566082', r: '#b8433a' };
+const HELM_COL: Record<string, string> = { K: '#14151c', B: '#06060a', '1': '#2a2c36', '2': '#4b4e5c', '3': '#767a8a', '4': '#a3a7b6', '5': '#d6d9e2' };
 
-/** Шлем крестоносца: глухой топфхельм с крестообразной прорезью и красным султаном. */
+/** Закрытый шлем рыцаря: купол с гребнем, налобная полоса, смотровая щель, лицевая пластина, кольчуга. Без цвета. */
 export function CrusaderHelm({ size = 36 }: { size?: number }) {
   return (
-    <svg width={size} height={(size * HELM.length) / 16} viewBox={`0 0 16 ${HELM.length}`} shapeRendering="crispEdges" aria-hidden="true" style={{ display: 'block' }}>
+    <svg width={size} height={(size * HELM.length) / 24} viewBox={`0 0 24 ${HELM.length}`} shapeRendering="crispEdges" aria-hidden="true" style={{ display: 'block' }}>
       {HELM.flatMap((row, y) =>
         [...row].map((c, x) => (c === '.' ? null : <rect key={`${x}-${y}`} x={x} y={y} width="1" height="1" fill={HELM_COL[c]} />)),
       )}
