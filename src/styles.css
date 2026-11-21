@@ -897,7 +897,7 @@ textarea.input {
   content: '';
   position: absolute;
   inset: -16px -22px;
-  background: radial-gradient(closest-side, rgba(255, 196, 92, 0.85), rgba(255, 196, 92, 0.35) 55%, rgba(255, 196, 92, 0) 100%);
+  background: radial-gradient(closest-side, rgba(130, 190, 255, 0.85), rgba(130, 190, 255, 0.35) 55%, rgba(130, 190, 255, 0) 100%);
   animation: helm-halo 2.6s ease-in-out infinite;
   pointer-events: none;
 }
@@ -910,8 +910,8 @@ textarea.input {
   50% { opacity: 1; transform: scale(1.08); }
 }
 @keyframes helm-shine {
-  0%, 100% { filter: drop-shadow(0 0 1px rgba(255, 190, 80, 0.5)); }
-  50% { filter: drop-shadow(0 0 4px rgba(255, 190, 80, 0.95)) drop-shadow(0 0 9px rgba(255, 210, 120, 0.7)); }
+  0%, 100% { filter: drop-shadow(0 0 1px rgba(110, 175, 255, 0.5)); }
+  50% { filter: drop-shadow(0 0 4px rgba(110, 175, 255, 0.95)) drop-shadow(0 0 9px rgba(170, 215, 255, 0.7)); }
 }
 @media (prefers-reduced-motion: reduce) {
   .helm-glow::before, .helm-glow svg { animation: none; }
