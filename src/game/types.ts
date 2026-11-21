@@ -54,6 +54,8 @@ export interface ActiveWalk {
   lastTs: number;
   sim: boolean;
   gps: 'ok' | 'weak' | 'lost';
+  hiddenAt?: number | null; // когда страница ушла в фон (экран погас)
+  gaps?: number; // сколько раз маршрут прерывался
 }
 
 export interface DayActivity {

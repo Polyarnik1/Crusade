@@ -19,7 +19,7 @@ export function MapScreen() {
   const { s, act } = useGame();
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
-  const layers = useRef<{ own?: L.Layer; nb?: L.LayerGroup; towers?: L.LayerGroup; track?: L.Polyline; me?: L.Marker; acc?: L.Circle }>({});
+  const layers = useRef<{ own?: L.Layer; nb?: L.LayerGroup; towers?: L.LayerGroup; track?: L.Layer; me?: L.Marker; acc?: L.Circle }>({});
   const tiles = useRef<TileHandle | null>(null);
   const [light, setLight] = useState(false);
   const [geo, setGeo] = useState<'wait' | 'ok' | 'denied' | 'fail' | 'none'>('wait');
@@ -179,7 +179,14 @@ export function MapScreen() {
         if (Number.isNaN(p[0])) parts.push([]);
         else parts[parts.length - 1].push(p);
       }
-      layers.current.track = L.polyline(parts, { color: '#F5D273', weight: 4, dashArray: '2 7', lineCap: 'square' }).addTo(m);
+      const g = L.layerGroup().addTo(m);
+      L.polyline(parts, { color: '#F5D273', weight: 4, dashArray: '2 7', lineCap: 'square' }).addTo(g);
+      // разрывы (экран гас, пауза) — тонкой бледной линией: видно, где маршрут не записан
+      for (let i = 1; i < parts.length; i++) {
+        const a = parts[i - 1][parts[i - 1].length - 1], b = parts[i][0];
+        if (a && b) L.polyline([a, b], { color: '#F5D273', weight: 1.5, opacity: 0.35, dashArray: '1 6' }).addTo(g);
+      }
+      layers.current.track = g;
     }
   }, [walk?.track.length, walk]);
 

@@ -54,15 +54,29 @@ export function useWalkTracker() {
   useEffect(() => {
     if (!active) return;
     let lock: WakeLockLike | null = null;
+    let alive = true;
     const nav = navigator as Navigator & { wakeLock?: { request: (t: 'screen') => Promise<WakeLockLike> } };
-    nav.wakeLock
-      ?.request('screen')
-      .then((l) => (lock = l))
-      .catch(() => {});
+    const grab = () =>
+      nav.wakeLock
+        ?.request('screen')
+        .then((l) => {
+          if (alive) lock = l;
+          else l.release().catch(() => {});
+        })
+        .catch(() => {});
+    grab();
+    // браузер снимает блокировку, когда вкладка уходит в фон, — берём её снова при возврате
+    const onVis = () => {
+      if (document.visibilityState === 'visible') grab();
+      if (!sim) act.walkHidden(document.visibilityState === 'hidden');
+    };
+    document.addEventListener('visibilitychange', onVis);
     return () => {
+      alive = false;
+      document.removeEventListener('visibilitychange', onVis);
       lock?.release().catch(() => {});
     };
-  }, [active]);
+  }, [active, sim, act]);
 
   useEffect(() => {
     if (!startedAt) return;

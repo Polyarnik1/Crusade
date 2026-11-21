@@ -284,6 +284,14 @@ function useGameState() {
           }
         }),
 
+      /** Страница ушла в фон / вернулась: в фоне браузер не отдаёт GPS. */
+      walkHidden: (hidden: boolean) =>
+        mutate((d) => {
+          const w = d.walk;
+          if (!w || w.pausedAt || w.sim) return;
+          if (hidden) w.hiddenAt = w.hiddenAt ?? Date.now();
+        }),
+
       gpsState: (gps: 'ok' | 'weak' | 'lost') =>
         mutate((d) => {
           if (d.walk) d.walk.gps = gps;
@@ -300,7 +308,30 @@ function useGameState() {
             w.gps = 'weak';
             return;
           }
-          const lastSeg = w.segment[w.segment.length - 1];
+          let lastSeg: LatLng | undefined = w.segment[w.segment.length - 1];
+          // разрыв: экран гас или GPS молчал. Прямую через «слепой» участок не считаем стеной
+          // для захвата — иначе срезанная хорда даёт землю, по которой рыцарь не ходил.
+          if (lastSeg && !w.sim) {
+            const gapDt = (ts - w.lastTs) / 1000;
+            const gd = dist(lastSeg, p);
+            const wasHidden = !!w.hiddenAt;
+            if ((wasHidden || gapDt > 25) && gd > 40) {
+              if (gd / Math.max(1, gapDt) <= 12) {
+                // пройденное всё равно засчитываем в километры (по прямой — это минимум)
+                w.distance += gd;
+                d.totalDistance += gd;
+                today(d).walkedM += gd;
+              }
+              w.track.push([NaN, NaN]);
+              w.segment = [];
+              w.segmentLen = [];
+              w.gaps = (w.gaps ?? 0) + 1;
+              if (wasHidden && w.gaps === 1)
+                toast(d, 'Путь прервался', 'Пока экран был выключен, браузер не видел GPS. Этот участок не пойдёт в захват — держи экран включённым.', 'toast');
+              lastSeg = undefined;
+            }
+          }
+          w.hiddenAt = null;
           if (lastSeg) {
             const dd = dist(lastSeg, p);
             const dt = (ts - w.lastTs) / 1000;
