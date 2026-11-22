@@ -253,7 +253,7 @@ export function MapScreen() {
         <div className="row" style={{ marginTop: 8, alignItems: 'flex-start' }}>
           <div className="panel" style={{ padding: '8px 10px', fontSize: 12 }}>
             <div className="row" style={{ gap: 8 }}>
-              <span className={"legend-sw" + (s.kingdom ? "" : " legend-none")} style={s.kingdom ? { background: myColor } : undefined} />
+              <span className={"legend-sw" + (!s.kingdom ? " legend-none" : area <= 0 || exiled ? " legend-lost" : "")} style={s.kingdom ? { background: myColor } : undefined} />
               <span className="pf" style={{ fontSize: 16 }}>
                 {exiled ? `${ruler} в изгнании` : `${s.kingdom ? s.kingdom.name : 'Мои земли'}: ${formatArea(area)}`}
               </span>

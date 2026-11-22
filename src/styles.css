@@ -948,13 +948,18 @@ textarea.input {
 /* земель ещё нет: белый квадрат, чёрный контур, перечёркнут */
 .legend-none {
   background: #fff;
+}
+.legend-none,
+.legend-lost {
   position: relative;
   box-sizing: border-box;
   width: 16px;
   height: 16px;
 }
 .legend-none::before,
-.legend-none::after {
+.legend-none::after,
+.legend-lost::before,
+.legend-lost::after {
   content: '';
   position: absolute;
   left: 50%;
@@ -965,4 +970,5 @@ textarea.input {
   background: #0b0a10;
   transform: rotate(45deg);
 }
-.legend-none::after { transform: rotate(-45deg); }
+.legend-none::after,
+.legend-lost::after { transform: rotate(-45deg); }
