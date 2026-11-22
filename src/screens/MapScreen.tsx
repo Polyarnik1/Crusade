@@ -232,7 +232,7 @@ export function MapScreen() {
 
       <div className="hud hud-top">
         <div className="panel row" style={{ padding: '10px 12px' }}>
-          <div className="lvl" style={kingdomTone(s.kingdom?.banner.color)} aria-label={`Уровень ${t.level}`}>{t.level}</div>
+          <div className={"lvl" + (s.kingdom ? "" : " lvl-none")} style={s.kingdom ? kingdomTone(s.kingdom.banner.color) : WHITE_TONE} aria-label={s.kingdom ? `Уровень ${t.level}` : "Королевство не основано"}>{s.kingdom ? t.level : "?"}</div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="h2">{t.name}</div>
             <div style={{ margin: '6px 0 4px' }}>

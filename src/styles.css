@@ -941,3 +941,6 @@ textarea.input {
   .helm-glow::before, .helm-glow::after, .helm-glow svg { animation: none; }
   .btn-glow { animation: none; box-shadow: 0 0 16px 2px rgba(255, 255, 255, 0.45); }
 }
+
+/* уровень до основания королевства: белая плашка со знаком вопроса */
+.lvl-none { animation: none; box-shadow: 0 0 10px 1px rgba(255, 255, 255, 0.35); }
