@@ -944,3 +944,25 @@ textarea.input {
 
 /* уровень до основания королевства: белая плашка со знаком вопроса */
 .lvl-none { animation: none; box-shadow: 0 0 10px 1px rgba(255, 255, 255, 0.35); }
+
+/* земель ещё нет: белый квадрат, чёрный контур, перечёркнут */
+.legend-none {
+  background: #fff;
+  position: relative;
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+}
+.legend-none::before,
+.legend-none::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 2px;
+  height: 18px;
+  margin: -9px 0 0 -1px;
+  background: #0b0a10;
+  transform: rotate(45deg);
+}
+.legend-none::after { transform: rotate(-45deg); }
