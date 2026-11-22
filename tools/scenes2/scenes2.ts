@@ -609,6 +609,66 @@ Object.assign(SCENES2, {
       knightWalk(s, 26, 98, 0.75);
     },
   },
+  outpost: {
+    draw: (s: Scene2) => {
+      night(s, 90, 16, 8, { clouds: [26, 44, 0.4] });
+      range(s, 60, 16, { seed: 23, snow: false });
+      s.fog(58, 4, 0.5);
+      // дальний холм с основным замком
+      s.hill((x) => 62 - 7 * Math.exp(-Math.pow((x - 52) / 20, 2)), M.GROUND, { lift: 0.18 });
+      s.castle(52, 56, 0.75, { win: 0.5, flag: M.RED });
+      // река разделяет земли
+      s.hill(() => 68, M.WATER, { lift: 0.3, tex: 0, rim: 0 });
+      s.reflect(68, { fade: 0.006 });
+      // отдельный холм за рекой: на нём острог
+      s.poly([[86, 72], [96, 60], [108, 54], [126, 52], [144, 56], [160, 62], [160, 76], [86, 76]], M.GROUND, 0.26, { tex: rockTex(9), flat: 0.25, tilt: [-0.3, -0.4] });
+      const ox = 126, ob = 54;
+      // вышка внутри частокола
+      s.block(ox - 4, ob - 24, ox + 4, ob, M.WOOD, { brick: false, lift: 0.06 });
+      for (let y = ob - 22; y < ob; y += 4) s.cap(ox - 4, y, ox + 4, y, 0.4, 0.4, M.WOOD, 0.22);
+      s.cone(ox, ob - 25, 6, 6, M.ROOF);
+      s.rect(ox - 1, ob - 19, ox + 1, ob - 16, M.WINDOW, 0.95);
+      s.lights.push({ x: ox, y: ob - 17, r: 22, s: 0.7 });
+      banner(s, ox, ob - 31, 12, M.RED, 7, 1.2);
+      // частокол с заострёнными кольями
+      for (let x = ox - 17; x <= ox + 17; x += 3) {
+        const h = 10 + Math.round(hash(x, 3, 7) * 2);
+        for (let y = ob - h + 2; y <= ob + 2; y++) {
+          s.put(x - 1, y, M.WOOD, 0.24);
+          s.put(x, y, M.WOOD, 0.4 + (hash(x, y, 4) - 0.5) * 0.06);
+          s.put(x + 1, y, M.WOOD, 0.3);
+        }
+        s.put(x - 1, ob - h + 1, M.WOOD, 0.3);
+        s.put(x, ob - h + 1, M.WOOD, 0.5);
+        s.put(x + 1, ob - h + 1, M.WOOD, 0.36);
+        s.put(x, ob - h, M.WOOD, 0.6);
+        s.put(x, ob - h - 1, M.WOOD, 0.55);
+      }
+      s.cap(ox - 18, ob - 5, ox + 18, ob - 5, 0.4, 0.4, M.WOOD, 0.2);
+      s.rect(ox - 2, ob - 6, ox + 2, ob + 2, M.VOID, 0);
+      s.lights.push({ x: ox, y: ob - 2, r: 10, s: 0.4 });
+      // факелы у ворот
+      for (const x of [ox - 5, ox + 5]) {
+        s.cap(x, ob - 9, x, ob - 4, 0.4, 0.4, M.WOOD, 0.4);
+        s.bigFire(x, ob - 9, 1.2, { logs: false, light: 8 });
+      }
+      s.pines(74, { x0: 140, x1: 168, hMin: 10, hMax: 16 });
+      // берег на переднем плане
+      rockyGround(s, (x) => 84 + Math.sin(x * 0.06) * 2 - (x < 40 ? (40 - x) * 0.12 : 0), M.GROUND, 30);
+      s.pines(86, { x0: -6, x1: 14, hMin: 18, hMax: 26 });
+      // редкая трава: лето ещё не ушло
+      for (let i = 0; i < 70; i++) {
+        const x = Math.floor(hash(i, 1, 31) * W);
+        const y = 80 + Math.floor(hash(i, 2, 31) * 20);
+        if (s.m(x, y) !== M.GROUND) continue;
+        const v = 0.28 + hash(i, 3, 31) * 0.14;
+        s.put(x, y, M.GREEN, v);
+        s.put(x, y - 1, M.GREEN, v + 0.06);
+        if (hash(i, 4, 31) > 0.5) s.put(x + 1, y - 2, M.GREEN, v + 0.1);
+      }
+      knightStand(s, 30, 100, 0.85, { sword: true });
+    },
+  },
   far_land: {
     draw: (s: Scene2) => {
       night(s, 40, 20, 11, { clouds: [26, 40, 0.35] });
@@ -664,4 +724,5 @@ export const FX2: Record<string, { fx: string; emit?: [number, number]; subject?
   hundred: { fx: 'blizzard' },
   mordor: { fx: 'embers', emit: [80, 28] },
   far_land: { fx: 'stars' },
+  outpost: { fx: 'fireflies' },
 };

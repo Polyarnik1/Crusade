@@ -1,3 +1,4 @@
+import { towerSpots } from './geo';
 import { titleOf } from './levels';
 import type { GameState } from './types';
 
@@ -363,6 +364,15 @@ export const REGALIA: Regalia[] = [
     rarity: 'epic',
     kind: 'deed',
     check: (s) => farthest(s) >= 50,
+  },
+  {
+    id: 'outpost',
+    name: 'Дальний форпост',
+    how: 'Владеть землёй из нескольких отдельных частей — захватить удел вдали от своих земель или пережить раскол',
+    quote: 'Между твоими землями лежит чужая. Это не раскол — это стратегический замысел.',
+    rarity: 'rare',
+    kind: 'deed',
+    check: (s) => towerSpots(s.land).length >= 2,
   },
   {
     id: 'fire_keeper',

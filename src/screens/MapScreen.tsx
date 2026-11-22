@@ -162,7 +162,8 @@ export function MapScreen() {
       if (onClick) mk.on('click', onClick);
       mk.addTo(g);
     };
-    for (const p of towerSpots(s.land)) add(p, myTower, s.kingdom?.banner.color ?? 'gold');
+    // главная часть земель — башня королевства, отдельные — острог-форпост
+    towerSpots(s.land).forEach((p, i) => add(p, i === 0 ? myTower : 'outpost', s.kingdom?.banner.color ?? 'gold'));
     for (const n of s.neighbors) for (const p of towerSpots(n.land, 3)) add(p, n.tower, n.banner.color, () => setPicked(n));
     g.addTo(m);
     layers.current.towers = g;
