@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { REGALIA, dayKey } from './achievements';
 import type { SfxName } from '../audio/sfx';
-import { DEFAULT_BANNER, FORMS } from './cosmetics';
+import { FORMS } from './cosmetics';
 import { CLOSE_DIST, MIN_LOOP_LEN, dist, formatArea, landArea, landCenter, loopPieces, merge, overlapArea, rect, subtract } from './geo';
 import { gloryForArea, gloryForDistance, titleOf } from './levels';
 import { makeNeighbors } from './neighbors';
@@ -427,10 +427,6 @@ function useGameState() {
             )
               d.flags.changedBanner = true;
             if (d.kingdom.tower !== k.tower) d.flags.changedTower = true;
-          } else {
-            const b = k.banner;
-            const db = DEFAULT_BANNER;
-            if (b.shape !== db.shape || b.pattern !== db.pattern || b.symbol !== db.symbol) d.flags.changedBanner = true;
           }
           d.kingdom = { ...k, foundedAt: d.kingdom?.foundedAt ?? Date.now() };
           d.ui.showFounding = false;
