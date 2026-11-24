@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { BENEDICT, BENEDICT_TSUN } from '../art/benedict.gen';
+import { sfx } from '../audio/sfx';
 
 // Бенедикт — загадочный советник. Выплывает из тени слева, говорит и уходит.
 
@@ -125,9 +126,14 @@ export function BenedictDialog({ kingdom, onDone }: { kingdom: string; onDone: (
   // печатаем текст по буквам
   useEffect(() => {
     if (phase !== 'talk' || done) return;
-    const t = setTimeout(() => setShown((v) => v + 1), text[shown] && /[.,!?…—]/.test(text[shown]) ? 90 : 28);
+    const ch = text[shown];
+    const t = setTimeout(() => {
+      // как у монстров в Undertale: «бип» на буквы, паузы на знаках и пробелах
+      if (ch && /[\p{L}\p{N}]/u.test(ch) && shown % 2 === 0) sfx.play(mood === 'tsun' ? 'speakTsun' : 'speak');
+      setShown((v) => v + 1);
+    }, ch && /[.,!?…—]/.test(ch) ? 90 : 28);
     return () => clearTimeout(t);
-  }, [phase, shown, done, text]);
+  }, [phase, shown, done, text, mood]);
 
   const go = (id: string) => {
     setNode(id);
@@ -141,13 +147,18 @@ export function BenedictDialog({ kingdom, onDone }: { kingdom: string; onDone: (
 
   const tap = () => {
     if (phase !== 'talk') return;
-    if (!done) return setShown(text.length);
+    if (!done) {
+      sfx.play('dlgSkip');
+      return setShown(text.length);
+    }
     if (!last) {
+      sfx.play('dlgNext');
       setLine(line + 1);
       setShown(0);
       return;
     }
     if (n.choices) return;
+    sfx.play('dlgNext');
     if (n.next) return go(n.next);
     leave();
   };
@@ -177,6 +188,7 @@ export function BenedictDialog({ kingdom, onDone }: { kingdom: string; onDone: (
                   className="btn btn-sm"
                   onClick={(e) => {
                     e.stopPropagation();
+                    sfx.play('dlgNext');
                     go(c.to);
                   }}
                 >

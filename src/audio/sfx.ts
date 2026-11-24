@@ -19,7 +19,11 @@ export type SfxName =
   | 'exile'
   | 'restore'
   | 'quest'
-  | 'toast';
+  | 'toast'
+  | 'speak'
+  | 'speakTsun'
+  | 'dlgNext'
+  | 'dlgSkip';
 
 // крупные звуки не накладываются друг на друга, а встают в очередь
 const MAJOR: Partial<Record<SfxName, number>> = { regalia: 2.2, found: 1.8, exile: 2.4, restore: 1.6, title: 1.2, capture: 1.0, border: 1.2, finish: 1.0 };
@@ -421,6 +425,61 @@ class Sfx {
   }
   private toast(t: number) {
     this.bell(NOTE('A5'), t, { gain: 0.13, dur: 1.2, wet: 0.4, bright: 0.5 });
+  }
+
+  // ── голос Бенедикта: короткие «бипы» в духе монстров Undertale ──
+  private blip(t: number, notes: string[], o: { gain: number; wave: OscillatorType; dur: number; cutoff: number }) {
+    const ctx = this.ctx!;
+    const f = NOTE(notes[Math.floor(Math.random() * notes.length)]) * (1 + (Math.random() - 0.5) * 0.02);
+    const bus = this.bus(o.gain, 0.06);
+    const lp = this.filter('lowpass', o.cutoff, 0.8);
+    const g = ctx.createGain();
+    // почти прямоугольная огибающая: резкий старт, короткий хвост
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(1, t + 0.004);
+    g.gain.setValueAtTime(1, t + o.dur * 0.7);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + o.dur);
+    lp.connect(g).connect(bus);
+    this.osc(o.wave, f, t, o.dur, lp);
+    this.osc('square', f / 2, t, o.dur, lp, 6); // октавой ниже: «густота»
+  }
+  /** Буква за буквой: низкий, глуховатый голос. */
+  private speak(t: number) {
+    this.blip(t, ['D3', 'E3', 'F#3', 'A3', 'G3'], { gain: 0.06, wave: 'square', dur: 0.055, cutoff: 1500 });
+  }
+  /** Цундере: тот же голос, но выше и резче. */
+  private speakTsun(t: number) {
+    this.blip(t, ['A3', 'B3', 'D4', 'E4', 'C#4'], { gain: 0.055, wave: 'square', dur: 0.045, cutoff: 2600 });
+  }
+  /** Клик: следующая реплика. */
+  private dlgNext(t: number) {
+    const ctx = this.ctx!;
+    const bus = this.bus(0.5, 0.04);
+    const n = this.noiseSrc(t, 0.03);
+    const bp = this.filter('bandpass', 2200, 2.5);
+    const g = ctx.createGain();
+    this.env(g, t, 0.001, 0.8, 0.02);
+    n.connect(bp).connect(g).connect(bus);
+    const og = ctx.createGain();
+    this.env(og, t, 0.001, 0.5, 0.05);
+    og.connect(bus);
+    const o = this.osc('square', 880, t, 0.06, og);
+    o.frequency.exponentialRampToValueAtTime(1320, t + 0.03);
+  }
+  /** Клик: пропустить, дописать фразу целиком. */
+  private dlgSkip(t: number) {
+    const ctx = this.ctx!;
+    const bus = this.bus(0.5, 0.04);
+    const n = this.noiseSrc(t, 0.03);
+    const bp = this.filter('bandpass', 1400, 2.5);
+    const g = ctx.createGain();
+    this.env(g, t, 0.001, 0.7, 0.02);
+    n.connect(bp).connect(g).connect(bus);
+    const og = ctx.createGain();
+    this.env(og, t, 0.001, 0.4, 0.05);
+    og.connect(bus);
+    const o = this.osc('square', 700, t, 0.05, og);
+    o.frequency.exponentialRampToValueAtTime(420, t + 0.035);
   }
 }
 
