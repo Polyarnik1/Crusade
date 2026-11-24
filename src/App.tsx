@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { sfx } from './audio/sfx';
+import { BenedictDialog } from './components/Benedict';
 import { TabBar, Toasts, type Tab } from './components/ui';
 import { REGALIA } from './game/achievements';
 import { useGame } from './game/store';
@@ -38,6 +39,14 @@ export function App() {
   // во время похода регалии приходят тостом, а торжественное окно — после похода
   const unlockId = s.walk ? undefined : s.ui.unlockQueue[0];
   const unlock = unlockId ? REGALIA.find((r) => r.id === unlockId) : null;
+  // Бенедикт приходит один раз после основания державы, когда все окна закрыты
+  const benedictDue = !!s.kingdom && !s.flags.metBenedict && !unlock && !s.ui.showFounding && !s.walk && tab === 'map';
+  const [benedict, setBenedict] = useState(false);
+  useEffect(() => {
+    if (!benedictDue) return;
+    const t = setTimeout(() => setBenedict(true), 1600);
+    return () => clearTimeout(t);
+  }, [benedictDue]);
   const unseen = REGALIA.some((r) => s.unlocked[r.id] && !s.seen[r.id]);
 
   return (
@@ -66,6 +75,15 @@ export function App() {
           onClose={() => {
             act.markSeen(unlock.id);
             act.shiftUnlock();
+          }}
+        />
+      )}
+      {benedict && s.kingdom && (
+        <BenedictDialog
+          kingdom={s.kingdom.name}
+          onDone={() => {
+            setBenedict(false);
+            act.meetBenedict();
           }}
         />
       )}

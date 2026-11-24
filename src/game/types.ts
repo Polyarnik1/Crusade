@@ -101,6 +101,7 @@ export interface Flags {
   exiled?: boolean; // правитель в изгнании: своих земель нет
   everExiled?: boolean;
   returned?: boolean;
+  metBenedict?: boolean; // знакомство с Бенедиктом уже было
 }
 
 export interface Hero {

@@ -451,6 +451,11 @@ function useGameState() {
           d.flags.changedTower = true;
         }),
 
+      meetBenedict: (met = true) =>
+        mutate((d) => {
+          d.flags.metBenedict = met;
+        }),
+
       // для разработки: отобрать все земли, чтобы посмотреть, как выглядит изгнание
       loseLand: () =>
         mutate((d) => {

@@ -6,6 +6,7 @@ import { attachTiles, type TileHandle } from '../art/tiles';
 import { Banner, towerSvg } from '../art/heraldry';
 import { Bar, CrusaderHelm, Icon, Sheet } from '../components/ui';
 import { streak } from '../game/achievements';
+import { BENEDICT_SIL } from '../art/benedict.gen';
 import { FORMS, WHITE_TONE, colorHex, kingdomTone } from '../game/cosmetics';
 import { dist, formatArea, formatKm, landArea, landCenter, towerSpots } from '../game/geo';
 import { titleOf } from '../game/levels';
@@ -275,9 +276,15 @@ export function MapScreen() {
             )}
           </div>
           <div style={{ flex: 1 }} />
-          <button type="button" className="btn btn-icon" onClick={locate} aria-label="Показать, где я">
-            <Icon name="locate" size={22} />
-          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <button type="button" className="btn btn-icon" onClick={locate} aria-label="Показать, где я">
+              <Icon name="locate" size={22} />
+            </button>
+            {/* советник Бенедикт: пока без действия */}
+            <button type="button" className="btn btn-icon btn-bene" aria-label="Бенедикт" aria-disabled="true">
+              <img src={BENEDICT_SIL} alt="" />
+            </button>
+          </div>
         </div>
         {geo === 'ok' && !walk && acc !== null && acc > 50 && (
           <div className="panel" style={{ marginTop: 8, padding: '8px 10px', fontSize: 12 }}>

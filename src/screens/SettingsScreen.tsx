@@ -136,6 +136,11 @@ export function SettingsScreen({ onBack }: { onBack: () => void }) {
             Отобрать земли
           </button>
         </Row>
+        <Row title="Бенедикт" hint="Показать знакомство с Бенедиктом ещё раз — он придёт на карте">
+          <button type="button" className="btn btn-sm" style={{ marginTop: 8 }} onClick={() => act.meetBenedict(false)} disabled={!s.kingdom || !s.flags.metBenedict}>
+            Позвать снова
+          </button>
+        </Row>
       </Group>
 
       <Group title="Данные">
