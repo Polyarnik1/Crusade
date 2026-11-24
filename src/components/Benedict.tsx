@@ -118,7 +118,7 @@ export function BenedictDialog({ kingdom, onDone }: { kingdom: string; onDone: (
   const mood: Mood = n.mood ?? 'calm';
 
   useEffect(() => {
-    const t = setTimeout(() => setPhase('talk'), 1300);
+    const t = setTimeout(() => setPhase("talk"), 1100);
     return () => clearTimeout(t);
   }, []);
 
@@ -136,7 +136,7 @@ export function BenedictDialog({ kingdom, onDone }: { kingdom: string; onDone: (
   };
   const leave = () => {
     setPhase('out');
-    setTimeout(onDone, 1100);
+    setTimeout(onDone, 1200);
   };
 
   const tap = () => {
@@ -154,35 +154,40 @@ export function BenedictDialog({ kingdom, onDone }: { kingdom: string; onDone: (
 
   return (
     <div className={'bene bene--' + phase} role="dialog" aria-label="Бенедикт" onClick={tap}>
-      <div className="bene-shadow" />
-      <div className="bene-figure">
-        <Sprite mood={mood} />
-      </div>
-      <div className="bene-box panel">
-        <div className="bene-name pf">Бенедикт</div>
-        <p className="bene-text">
-          {text.slice(0, shown)}
-          <span className="bene-ghost">{text.slice(shown)}</span>
-        </p>
-        {done && last && n.choices ? (
-          <div className="bene-choices">
-            {n.choices.map((c) => (
-              <button
-                key={c.to}
-                type="button"
-                className="btn btn-sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  go(c.to);
-                }}
-              >
-                {c.label}
-              </button>
-            ))}
-          </div>
-        ) : (
-          <div className="bene-more muted">{done ? '▼' : ''}</div>
-        )}
+      <div className="bene-unit">
+        <div className="bene-figure">
+          <Sprite mood={mood} />
+        </div>
+        <div className="bene-box">
+          <i className="bene-corner tl" />
+          <i className="bene-corner tr" />
+          <i className="bene-corner bl" />
+          <i className="bene-corner br" />
+          <div className="bene-name pf">Бенедикт</div>
+          <p className="bene-text">
+            {text.slice(0, shown)}
+            <span className="bene-ghost">{text.slice(shown)}</span>
+          </p>
+          {done && last && n.choices ? (
+            <div className="bene-choices">
+              {n.choices.map((c) => (
+                <button
+                  key={c.to}
+                  type="button"
+                  className="btn btn-sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    go(c.to);
+                  }}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="bene-more">{done ? '▼' : ''}</div>
+          )}
+        </div>
       </div>
     </div>
   );
