@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { music } from '../audio/music';
 import { sfx } from '../audio/sfx';
 import { answer, asksLeft, BENE_ASKS, freshDay, newBene, solve, take, type Topic } from '../game/benedict';
 import * as T from '../game/benedictLines';
@@ -42,7 +43,13 @@ export function BenedictVisit({ onDone }: { onDone: () => void }) {
   const [riddle, setRiddle] = useState<number | null>(null);
   const timers = useRef<number[]>([]);
   const later = (fn: () => void, ms: number) => timers.current.push(window.setTimeout(fn, ms));
-  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+  useEffect(
+    () => () => {
+      timers.current.forEach(clearTimeout);
+      music.fadeOut(1.2);
+    },
+    [],
+  );
 
   const opts = useMemo(() => (riddle === null ? [] : shuffle([T.RIDDLES[riddle].a, ...T.RIDDLES[riddle].w])), [riddle]);
   const text = lines[line] ?? '';
@@ -55,6 +62,7 @@ export function BenedictVisit({ onDone }: { onDone: () => void }) {
   };
 
   useEffect(() => {
+    if (!tired.current) music.preload();
     later(() => setPhase('sleep'), 1100);
   }, []);
 
@@ -69,7 +77,15 @@ export function BenedictVisit({ onDone }: { onDone: () => void }) {
     return () => clearTimeout(t);
   }, [phase, shown, done, text, tsun]);
 
+  // под его речью музыка тише, в паузах громче
+  useEffect(() => {
+    if (phase === 'talk') music.setLevel(done ? 'idle' : 'talk');
+    else if (phase === 'menu' || phase === 'pick') music.setLevel('idle');
+  }, [phase, done]);
+
   const say = (ls: string[], next: 'menu' | 'pick' | 'leave', isTsun = false) => {
+    if (isTsun) music.tapeStop();
+    else if (music.cut && next !== 'leave') void music.play(4.5); // неловкая пауза кончилась — тема тихо возвращается
     setLines(ls);
     setLine(0);
     setShown(0);
@@ -81,6 +97,7 @@ export function BenedictVisit({ onDone }: { onDone: () => void }) {
   const leave = () => {
     setBubble(null);
     setPhase('out');
+    music.fadeOut(2.4);
     later(onDone, 1200);
   };
 
@@ -101,6 +118,7 @@ export function BenedictVisit({ onDone }: { onDone: () => void }) {
     later(() => setPhase('rise'), 560);
     later(() => {
       setRub(true);
+      void music.play(4);
       setBubble(take(nb, 'wk', T.WAKE));
       persist(nb);
       setPhase('menu');

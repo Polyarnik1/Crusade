@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { sfx } from './audio/sfx';
+import { music } from './audio/music';
 import { BenedictDialog } from './components/Benedict';
 import { BenedictVisit } from './components/BenedictVisit';
 import { sulking, sulkLeft } from './game/benedict';
@@ -47,6 +48,7 @@ export function App() {
   const [benedict, setBenedict] = useState(false);
   useEffect(() => {
     if (!benedictDue) return;
+    music.preload();
     const t = setTimeout(() => setBenedict(true), 1600);
     return () => clearTimeout(t);
   }, [benedictDue]);

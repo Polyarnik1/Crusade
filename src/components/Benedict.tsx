@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { BENEDICT, BENEDICT_SLEEP, BENEDICT_TSUN } from '../art/benedict.gen';
+import { music } from '../audio/music';
 import { sfx } from '../audio/sfx';
 
 // Бенедикт — загадочный советник. Выплывает из тени слева, говорит и уходит.
@@ -125,9 +126,19 @@ export function BenedictDialog({ kingdom, onDone }: { kingdom: string; onDone: (
   const mood: Mood = n.mood ?? 'calm';
 
   useEffect(() => {
-    const t = setTimeout(() => setPhase("talk"), 1100);
-    return () => clearTimeout(t);
+    const t = setTimeout(() => setPhase('talk'), 1100);
+    // тема Бенедикта: входит вместе с ним и тает, когда он уходит
+    void music.play(3.5);
+    return () => {
+      clearTimeout(t);
+      music.fadeOut(1.2);
+    };
   }, []);
+
+  // под его речью музыка тише, в паузах громче
+  useEffect(() => {
+    if (phase === 'talk') music.setLevel(done ? 'idle' : 'talk');
+  }, [phase, done]);
 
   // печатаем текст по буквам
   useEffect(() => {
@@ -142,13 +153,17 @@ export function BenedictDialog({ kingdom, onDone }: { kingdom: string; onDone: (
   }, [phase, shown, done, text, mood]);
 
   const go = (id: string) => {
-    if (id === 'name') asked.current = true;
+    if (id === 'name') {
+      asked.current = true;
+      music.tapeStop(); // «Тебя правда это волнует!?» — и музыка садится, как плёнка
+    }
     setNode(id);
     setLine(0);
     setShown(0);
   };
   const leave = () => {
     setPhase('out');
+    music.fadeOut(2.6);
     setTimeout(() => onDone(asked.current), 1200);
   };
 

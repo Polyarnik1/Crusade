@@ -57,6 +57,11 @@ class Sfx {
     window.addEventListener('keydown', unlock);
   }
 
+  /** общий AudioContext — им же пользуется музыка */
+  audioContext(): AudioContext | null {
+    return this.ensure();
+  }
+
   setVolume(v: number) {
     this.volume = v;
     if (this.out && this.ctx) this.out.gain.setTargetAtTime(v * 0.9, this.ctx.currentTime, 0.05);
