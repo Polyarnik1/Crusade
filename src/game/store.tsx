@@ -4,7 +4,7 @@ import type { SfxName } from '../audio/sfx';
 import { CHRON, TAILED, TAILS, fill, walkKey, type ChronKey } from './chronicleLines';
 import { CLASSES, FORMS, type ClassId } from './cosmetics';
 import { newBene } from './benedict';
-import { CLOSE_DIST, MIN_LOOP_LEN, dist, formatArea, landArea, landCenter, loopPieces, merge, overlapArea, rect, subtract } from './geo';
+import { BIKE_KM_SHARE, BIKE_MAX, CLOSE_DIST, FOOT_MAX, MIN_LOOP_LEN, dist, formatArea, landArea, landCenter, loopPieces, merge, overlapArea, paceMode, rect, subtract } from './geo';
 import { gloryForArea, gloryForDistance, titleOf } from './levels';
 import { makeNeighbors } from './neighbors';
 import type { BeneState, ChronicleEntry, DayActivity, GameState, Hero, Kingdom, LatLng, Settings } from './types';
@@ -328,11 +328,14 @@ function useGameState() {
             const gd = dist(lastSeg, p);
             const wasHidden = !!w.hiddenAt;
             if ((wasHidden || gapDt > 25) && gd > 40) {
-              if (gd / Math.max(1, gapDt) <= 12) {
-                // пройденное всё равно засчитываем в километры (по прямой — это минимум)
-                w.distance += gd;
-                d.totalDistance += gd;
-                today(d).walkedM += gd;
+              const gv = gd / Math.max(1, gapDt);
+              if (gv <= BIKE_MAX) {
+                // пройденное всё равно засчитываем в километры (по прямой — это минимум);
+                // верхом — с коэффициентом, быстрее велосипеда — не засчитываем
+                const gk = gv > FOOT_MAX ? gd * BIKE_KM_SHARE : gd;
+                w.distance += gk;
+                d.totalDistance += gk;
+                today(d).walkedM += gk;
               }
               w.track.push([NaN, NaN]);
               w.segment = [];
@@ -352,10 +355,35 @@ function useGameState() {
               return;
             }
             if (!w.sim && dt > 0 && dd / dt > 12) return; // скачок GPS, а не рыцарь на коне
-            w.distance += dd;
-            d.totalDistance += dd;
+            let km = dd; // сколько метров идёт в зачёт вёрст
+            if (!w.sim) {
+              const pace = (w.pace ??= []);
+              pace.push([ts, (pace.length ? pace[pace.length - 1][1] : 0) + dd]);
+              while (pace.length > 2 && ts - pace[0][0] > 40000) pace.shift();
+              const mode = paceMode(pace, w.mode);
+              if (mode === 'fast') {
+                // машина, поезд или скоростной велосипед: ни вёрст, ни земли; маршрут рвём
+                if (w.mode !== 'fast')
+                  toast(d, 'Конь слишком резв', 'Земля и вёрсты засчитываются, пока ты идёшь пешком или едешь на велосипеде.', 'toast');
+                if (w.mode !== 'fast') {
+                  w.track.push([NaN, NaN]);
+                  w.gaps = (w.gaps ?? 0) + 1;
+                }
+                w.mode = 'fast';
+                w.lastTs = ts;
+                w.segment = [p]; // след начнётся заново, когда скорость спадёт
+                w.segmentLen = [0];
+                return;
+              }
+              if (mode === 'bike' && w.mode !== 'bike' && !d.flags.bikeTold)
+                d.flags.bikeTold = true, toast(d, 'Верхом', 'Землю брать можно, но вёрсты верхом идут с коэффициентом ×0,4.', 'toast');
+              w.mode = mode;
+              if (mode === 'bike') km = dd * BIKE_KM_SHARE;
+            }
+            w.distance += km;
+            d.totalDistance += km;
             const day = today(d);
-            day.walkedM += dd;
+            day.walkedM += km;
             const goal = d.settings.dailyGoalKm * 1000;
             if (!day.goalRewarded && day.walkedM >= goal) {
               day.goalRewarded = true;

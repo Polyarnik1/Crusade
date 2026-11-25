@@ -364,7 +364,11 @@ function WalkPanel() {
   const time = (hh ? `${hh}:` + String(mm % 60).padStart(2, '0') : String(mm).padStart(2, '0')) + ':' + String(ss).padStart(2, '0');
   const gps = w.sim
     ? { t: 'Тестовый маршрут', c: 'var(--blue)' }
-    : w.gps === 'ok'
+    : w.gps === 'ok' && w.mode === 'fast'
+      ? { t: 'Слишком быстро — путь не засчитывается', c: 'var(--red)' }
+      : w.gps === 'ok' && w.mode === 'bike'
+        ? { t: 'Верхом — земля берётся, вёрсты ×0,4', c: 'var(--gold)' }
+      : w.gps === 'ok'
       ? { t: 'GPS стабилен', c: '#4FB36A' }
       : w.gps === 'weak'
         ? { t: 'GPS слабый — выйди на открытое место', c: 'var(--gold)' }

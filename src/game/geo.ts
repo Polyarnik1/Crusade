@@ -124,3 +124,24 @@ export function formatArea(m2: number): string {
 export function formatKm(m: number): string {
   return (m / 1000).toFixed(m < 10000 ? 2 : 1).replace('.', ',');
 }
+
+/** Скорость, по которой отличаем пешехода, велосипедиста и машину (устойчивая, за ~30 с). */
+export const FOOT_MAX = 4.2; // м/с ≈ 15 км/ч — бег ещё «пешком»
+export const BIKE_MAX = 9.5; // м/с ≈ 34 км/ч — выше это уже не велосипед
+export const BIKE_KM_SHARE = 0.4; // верхом вёрсты (слава, цель дня) идут с коэффициентом
+
+export type Pace = 'foot' | 'bike' | 'fast';
+
+export function paceMode(win: [number, number][], prev: Pace = 'foot'): Pace {
+  if (win.length < 4) return prev;
+  const [t0, d0] = win[0];
+  const [t1, d1] = win[win.length - 1];
+  const sec = (t1 - t0) / 1000;
+  if (sec < 18) return prev;
+  const v = (d1 - d0) / sec;
+  // гистерезис, чтобы режим не дёргался на границе
+  const up = prev === 'foot' ? 0 : 0.5;
+  if (v > BIKE_MAX - (prev === 'fast' ? 0.8 : 0)) return 'fast';
+  if (v > FOOT_MAX - (prev === 'foot' ? 0 : up)) return 'bike';
+  return 'foot';
+}

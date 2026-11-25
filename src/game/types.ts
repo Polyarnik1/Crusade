@@ -56,6 +56,8 @@ export interface ActiveWalk {
   gps: 'ok' | 'weak' | 'lost';
   hiddenAt?: number | null; // когда страница ушла в фон (экран погас)
   gaps?: number; // сколько раз маршрут прерывался
+  pace?: [number, number][]; // [время мс, накопленные метры] за последние ~40 с — для оценки скорости
+  mode?: 'foot' | 'bike' | 'fast'; // пешком / верхом / слишком быстро
 }
 
 export interface DayActivity {
@@ -98,6 +100,7 @@ export interface Flags {
   tinyLoop: boolean;
   tookFromNeighbor: boolean;
   changedTower: boolean;
+  bikeTold?: boolean;
   changedBanner: boolean;
   patron: boolean;
   exiled?: boolean; // правитель в изгнании: своих земель нет
