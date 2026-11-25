@@ -16,7 +16,7 @@
   --sans: 'Inter', system-ui, sans-serif;
   --tab-h: 72px;
   --safe-b: env(safe-area-inset-bottom, 0px);
-  color-scheme: dark;
+  color-scheme: only dark;
 }
 
 * {
@@ -1121,3 +1121,35 @@ textarea.input {
 }
 .btn-bene { padding: 0; cursor: default; }
 .btn-bene img { width: 40px; height: 33px; image-rendering: pixelated; display: block; }
+
+/* экран только вертикально: в горизонтали на телефоне просим повернуть обратно */
+.rot-lock { display: none; }
+@media (orientation: landscape) and (max-height: 520px) and (pointer: coarse) {
+  .rot-lock {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    background: #0b0a10;
+    color: var(--text);
+    text-align: center;
+    font-family: var(--pixel);
+    font-size: 20px;
+  }
+  .rot-lock .rot-phone {
+    width: 22px;
+    height: 38px;
+    border: 4px solid var(--gold);
+    box-shadow: 0 0 0 3px #0b0a10, 0 0 12px rgba(227, 179, 65, 0.4);
+    transform: rotate(90deg);
+    animation: rot-turn 2.2s steps(8) infinite;
+  }
+  @keyframes rot-turn {
+    0%, 30% { transform: rotate(90deg); }
+    70%, 100% { transform: rotate(0deg); }
+  }
+}

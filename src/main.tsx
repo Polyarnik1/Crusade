@@ -16,3 +16,10 @@ createRoot(document.getElementById('root')!).render(
     </GameProvider>
   </StrictMode>,
 );
+
+// только вертикальный экран; в обычной вкладке браузер может отказать — тогда сработает заглушка в CSS
+try {
+  void (screen.orientation as unknown as { lock?: (o: string) => Promise<void> }).lock?.('portrait')?.catch(() => {});
+} catch {
+  /* не поддерживается */
+}

@@ -78,6 +78,10 @@ export function App() {
           }}
         />
       )}
+      <div className="rot-lock" aria-hidden="true">
+        <div className="rot-phone" />
+        <div>Поверни телефон вертикально</div>
+      </div>
       {benedict && s.kingdom && (
         <BenedictDialog
           kingdom={s.kingdom.name}
