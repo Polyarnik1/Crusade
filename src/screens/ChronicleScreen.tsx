@@ -1,5 +1,7 @@
 import { SceneArt } from '../art/SceneArt';
 import { Icon } from '../components/ui';
+import { reignLabel, seasonOf } from '../game/chronicleLines';
+import { dayKey } from '../game/achievements';
 import { formatKm } from '../game/geo';
 import { useGame } from '../game/store';
 import type { ChronicleEntry } from '../game/types';
@@ -12,17 +14,25 @@ const KIND_ICON: Record<ChronicleEntry['kind'], { icon: string; color: string }>
   kingdom: { icon: 'regalia', color: 'var(--gold)' },
   border: { icon: 'map', color: 'var(--red)' },
   quest: { icon: 'quests', color: 'var(--blue)' },
+  class: { icon: 'hero', color: 'var(--gold)' },
+  bene: { icon: 'hero', color: '#9FD4FF' },
 };
 
-function when(ts: number): string {
+const timeOf = (ts: number) => new Date(ts).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+
+/** Заголовок дня: «День 7 от основания · зима · сегодня». */
+function dayHead(ts: number, foundedAt?: number): string {
   const d = new Date(ts);
-  const today = new Date();
+  const now = new Date();
   const y = new Date();
-  y.setDate(today.getDate() - 1);
-  const time = d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-  if (d.toDateString() === today.toDateString()) return `сегодня, ${time}`;
-  if (d.toDateString() === y.toDateString()) return `вчера, ${time}`;
-  return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }) + `, ${time}`;
+  y.setDate(now.getDate() - 1);
+  const date =
+    d.toDateString() === now.toDateString()
+      ? 'сегодня'
+      : d.toDateString() === y.toDateString()
+        ? 'вчера'
+        : d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+  return [reignLabel(ts, foundedAt) ?? 'Дни странствий', seasonOf(ts), date].join(' · ');
 }
 
 export function ChronicleScreen() {
@@ -35,7 +45,7 @@ export function ChronicleScreen() {
         <h1 className="screen-title">Летопись</h1>
       </div>
       <p className="muted" style={{ margin: '8px 0 0', lineHeight: 1.45, fontSize: 14 }}>
-        Здесь записано всё, что ты совершил. Скоро рядом откроется таверна — лента, где можно хвастаться и щитпостить.
+        Летописец записывает каждое твоё деяние — и немного приукрашивает. Дни считаются от основания державы. Скоро рядом откроется таверна — лента, где можно хвастаться и щитпостить.
       </p>
 
       <div className="grid3" style={{ marginTop: 16 }}>
@@ -59,17 +69,21 @@ export function ChronicleScreen() {
             Летопись пока пуста. Выйди в первый поход.
           </p>
         ) : (
-          s.chronicle.slice(0, 120).map((c) => {
+          s.chronicle.slice(0, 120).map((c, i, all) => {
             const k = KIND_ICON[c.kind];
+            const head = i === 0 || dayKey(all[i - 1].ts) !== dayKey(c.ts);
             return (
-              <div key={c.id} className="chron">
-                <div className="ico" style={{ color: k.color }}>
-                  <Icon name={k.icon} size={16} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, lineHeight: 1.4 }}>{c.text}</div>
-                  <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>
-                    {when(c.ts)}
+              <div key={c.id} className="chron-wrap">
+                {head && <div className="chron-day pf">{dayHead(c.ts, s.kingdom?.foundedAt)}</div>}
+                <div className="chron">
+                  <div className="ico" style={{ color: k.color }}>
+                    <Icon name={k.icon} size={16} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 14, lineHeight: 1.4 }}>{c.text}</div>
+                    <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>
+                      {timeOf(c.ts)}
+                    </div>
                   </div>
                 </div>
               </div>

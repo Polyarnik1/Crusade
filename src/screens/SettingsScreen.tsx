@@ -39,7 +39,7 @@ export function SettingsScreen({ onBack }: { onBack: () => void }) {
 
       <Group title="Облик башен">
         {s.kingdom ? (
-          <Picks items={TOWERS} value={s.kingdom.tower} reg={reg} onPick={act.setTower} render={(i) => <Tower tower={i.id} color={s.kingdom!.banner.color} size={32} />} />
+          <Picks items={TOWERS} value={s.kingdom.tower} acc={{ reg, cls: s.cls }} onPick={act.setTower} render={(i) => <Tower tower={i.id} color={s.kingdom!.banner.color} size={32} />} />
         ) : (
           <p className="muted" style={{ fontSize: 14, margin: 0 }}>Сначала основай королевство — тогда появятся башни.</p>
         )}
@@ -142,6 +142,11 @@ export function SettingsScreen({ onBack }: { onBack: () => void }) {
           </button>
           <button type="button" className="btn btn-sm" style={{ marginTop: 8, marginLeft: 8 }} onClick={() => act.restBene()} disabled={!s.bene}>
             Снять лимит и обиду
+          </button>
+        </Row>
+        <Row title="Путь героя" hint="Через 5 дней игры Бенедикт предлагает выбрать путь. Для проверки можно вызвать выбор сразу">
+          <button type="button" className="btn btn-sm" style={{ marginTop: 8 }} onClick={() => act.askClass()} disabled={!s.kingdom || !s.flags.metBenedict}>
+            Предложить выбор сейчас
           </button>
         </Row>
       </Group>

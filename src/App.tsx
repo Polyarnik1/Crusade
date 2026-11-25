@@ -3,6 +3,8 @@ import { sfx } from './audio/sfx';
 import { music } from './audio/music';
 import { BenedictDialog } from './components/Benedict';
 import { BenedictVisit } from './components/BenedictVisit';
+import { ClassDialog } from './components/ClassChoice';
+import { dayKey } from './game/achievements';
 import { sulking, sulkLeft } from './game/benedict';
 import { SULK } from './game/benedictLines';
 import { TabBar, Toasts, type Tab } from './components/ui';
@@ -54,6 +56,18 @@ export function App() {
   }, [benedictDue]);
   // кнопка-силуэт на карте зовёт Бенедикта
   const [visit, setVisit] = useState(false);
+  // на шестой день игры Бенедикт предлагает выбрать путь (рыцарь, чародей, торговец)
+  const daysPlayed = Object.values(s.days).filter((d) => d.opened || d.walkedM > 0).length;
+  const classDue =
+    !!s.kingdom && !!s.flags.metBenedict && !s.cls && (daysPlayed >= 5 || !!s.flags.clsNow) && s.flags.clsDefer !== dayKey() &&
+    !unlock && !s.ui.showFounding && !s.walk && tab === 'map' && !benedict && !visit;
+  const [pickClass, setPickClass] = useState(false);
+  useEffect(() => {
+    if (!classDue) return;
+    music.preload();
+    const t = setTimeout(() => setPickClass(true), 1800);
+    return () => clearTimeout(t);
+  }, [classDue]);
   useEffect(() => {
     const call = () => {
       if (!s.kingdom) return;
@@ -88,7 +102,7 @@ export function App() {
       <Toasts />
 
       {s.ui.showFounding && !unlock && <KingdomEditor />}
-      {unlock && !visit && !benedict && (
+      {unlock && !visit && !benedict && !pickClass && (
         <RegaliaSheet
           r={unlock}
           fresh
@@ -112,6 +126,7 @@ export function App() {
         />
       )}
       {visit && <BenedictVisit onDone={() => setVisit(false)} />}
+      {pickClass && <ClassDialog onDone={() => setPickClass(false)} />}
     </div>
   );
 }

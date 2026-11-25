@@ -68,8 +68,10 @@ export interface DayActivity {
 export interface ChronicleEntry {
   id: string;
   ts: number;
-  kind: 'capture' | 'regalia' | 'title' | 'walk' | 'kingdom' | 'border' | 'quest';
+  kind: 'capture' | 'regalia' | 'title' | 'walk' | 'kingdom' | 'border' | 'quest' | 'class' | 'bene';
   text: string;
+  key?: string; // какая формулировка и из какого набора — чтобы не повторяться подряд
+  v?: number;
 }
 
 export interface Toast {
@@ -102,6 +104,8 @@ export interface Flags {
   everExiled?: boolean;
   returned?: boolean;
   metBenedict?: boolean; // знакомство с Бенедиктом уже было
+  clsNow?: boolean; // для разработки: предложить путь, не дожидаясь пяти дней
+  clsDefer?: string; // день, когда игрок попросил спросить про путь позже
 }
 
 export interface Hero {
@@ -152,6 +156,7 @@ export interface GameState {
   settings: Settings;
   flags: Flags;
   bene?: BeneState;
+  cls?: import('./cosmetics').ClassId; // выбранный путь
   // очередь интерфейса
   ui: {
     showFounding: boolean;

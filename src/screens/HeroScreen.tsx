@@ -5,7 +5,7 @@ import { Pixel } from '../art/Pixel';
 import { REGALIA_ART } from '../art/arts';
 import { Icon } from '../components/ui';
 import { REGALIA, regaliaCount, streak } from '../game/achievements';
-import { FORMS, colorHex } from '../game/cosmetics';
+import { CLASSES, FORMS, colorHex } from '../game/cosmetics';
 import { formatArea, formatKm } from '../game/geo';
 import { titleOf } from '../game/levels';
 import { isExiled, useGame } from '../game/store';
@@ -42,6 +42,11 @@ export function HeroScreen({ onSettings }: { onSettings: () => void }) {
         <div className="muted" style={{ marginTop: 2, fontSize: 14 }}>
           Ур. {t.level} · {t.name}
         </div>
+        {s.cls && (
+          <div className="label" style={{ marginTop: 6, color: 'var(--gold)' }}>
+            Путь: {CLASSES.find((c) => c.id === s.cls)?.name}
+          </div>
+        )}
         {isExiled(s) && (
           <div className="panel" style={{ marginTop: 10, padding: '8px 12px', fontSize: 13 }}>
             {form?.ruler ?? 'Правитель'} в изгнании: своих земель нет. Захвати любой клочок, чтобы вернуть владения.

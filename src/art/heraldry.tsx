@@ -15,6 +15,12 @@ const SYMBOL_ART: Record<string, string[]> = {
   key: ['.XXX.....', 'X...X....', 'X...XXXXX', 'X...X..X.', '.XXX...XX'],
   wolf: ['X.....X', 'XX...XX', 'XXXXXXX', 'X.XXX.X', 'XXXXXXX', '.XXXXX.', '..XXX..', '...X...'],
   dragon: ['..XX.....', '.XX.X....', 'XXXXX...X', '...XX..XX', '..XXXXXX.', '.XXXXXX..', 'XX.X.X...', 'X..X.X...'],
+  helm: ['..XXXXX..', '.XXXXXXX.', 'XXXXXXXXX', 'XX.....XX', 'XXXXXXXXX', 'XX.X.X.XX', 'XX.X.X.XX', '.XXXXXXX.'],
+  cross: ['...XXX...', '...XXX...', 'XXXXXXXXX', 'XXXXXXXXX', 'XXXXXXXXX', '...XXX...', '...XXX...', '...XXX...'],
+  hat: ['....X....', '...XX....', '...XXX...', '..XXXX...', '..XXXXX..', '.XXXXXXX.', 'XXXXXXXXX', '.XXXXXXX.'],
+  moon: ['...XXX...', '..XX.....', '.XX......', '.XX......', '.XX......', '.XX......', '..XX.....', '...XXX...'],
+  coin: ['..XXXXX..', '.XX...XX.', 'XX..X..XX', 'X..XXX..X', 'XX..X..XX', '.XX...XX.', '..XXXXX..'],
+  scales: ['....X....', 'XXXXXXXXX', 'X...X...X', 'X...X...X', 'XXX.X.XXX', '....X....', '..XXXXX..'],
 };
 
 function inside(shape: string, x: number, y: number): boolean {

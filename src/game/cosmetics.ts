@@ -1,10 +1,59 @@
 // Всё, чем игрок может украсить королевство. `need` — сколько регалий нужно, чтобы открыть.
 
+export type ClassId = 'knight' | 'wizard' | 'merchant';
+
 export interface Unlockable {
   id: string;
   name: string;
   need: number;
+  cls?: ClassId; // скрытое украшение: открывается только выбранным путём, регалии не нужны
 }
+
+/** Что открыто игроку: сколько регалий и какой путь выбран. */
+export interface Access {
+  reg: number;
+  cls?: ClassId;
+}
+
+export interface ClassDef {
+  id: ClassId;
+  name: string;
+  blurb: string;
+  opens: string;
+  tower: string;
+  symbol: string;
+  color: string;
+}
+
+export const CLASSES: ClassDef[] = [
+  {
+    id: 'knight',
+    name: 'Рыцарь',
+    blurb: 'Честь, сталь и знамя впереди.',
+    opens: 'командорство, бастион, цвета стали и крови, шлем и крест на знамя',
+    tower: 'bastion',
+    symbol: 'helm',
+    color: 'steel',
+  },
+  {
+    id: 'wizard',
+    name: 'Чародей',
+    blurb: 'Тайны, звёзды и странная погода.',
+    opens: 'чародейский круг, башню чародея, цвета индиго и лунного света, колпак и полумесяц на знамя',
+    tower: 'sorcery',
+    symbol: 'hat',
+    color: 'indigo',
+  },
+  {
+    id: 'merchant',
+    name: 'Торговец',
+    blurb: 'Выгода, дороги и звон монет.',
+    opens: 'торговую республику, купеческий дом, цвета бордо и меди, монету и весы на знамя',
+    tower: 'tradehouse',
+    symbol: 'coin',
+    color: 'wine',
+  },
+];
 
 export interface ColorDef extends Unlockable {
   hex: string;
@@ -25,6 +74,12 @@ export const COLORS: ColorDef[] = [
   { id: 'wormwood', name: 'Полынь', hex: '#A3C26A', need: 6 },
   { id: 'sea', name: 'Морская волна', hex: '#3FBFA8', need: 10 },
   { id: 'royal', name: 'Королевская синь', hex: '#6A7BFF', need: 10 },
+  { id: 'steel', name: 'Закалённая сталь', hex: '#7C8BA6', need: 0, cls: 'knight' },
+  { id: 'blood', name: 'Кровь', hex: '#A8232B', need: 0, cls: 'knight' },
+  { id: 'indigo', name: 'Индиго', hex: '#4B4CC8', need: 0, cls: 'wizard' },
+  { id: 'moonlight', name: 'Лунный свет', hex: '#D7E2FF', need: 0, cls: 'wizard' },
+  { id: 'wine', name: 'Бордо', hex: '#8E2646', need: 0, cls: 'merchant' },
+  { id: 'copper', name: 'Медь', hex: '#B8733A', need: 0, cls: 'merchant' },
 ];
 
 export interface FormDef extends Unlockable {
@@ -39,6 +94,9 @@ export const FORMS: FormDef[] = [
   { id: 'order', name: 'Орден', ruler: 'Магистр', need: 3 },
   { id: 'march', name: 'Марка', ruler: 'Маркграф', need: 6 },
   { id: 'empire', name: 'Империя', ruler: 'Император', need: 10 },
+  { id: 'commandery', name: 'Командорство', ruler: 'Командор', need: 0, cls: 'knight' },
+  { id: 'circle', name: 'Чародейский круг', ruler: 'Архимаг', need: 0, cls: 'wizard' },
+  { id: 'republic', name: 'Торговая республика', ruler: 'Дож', need: 0, cls: 'merchant' },
 ];
 
 export const TOWERS: Unlockable[] = [
@@ -48,6 +106,9 @@ export const TOWERS: Unlockable[] = [
   { id: 'castle', name: 'Замок', need: 6 },
   { id: 'lighthouse', name: 'Маяк', need: 8 },
   { id: 'citadel', name: 'Цитадель', need: 12 },
+  { id: 'bastion', name: 'Бастион', need: 0, cls: 'knight' },
+  { id: 'sorcery', name: 'Башня чародея', need: 0, cls: 'wizard' },
+  { id: 'tradehouse', name: 'Купеческий дом', need: 0, cls: 'merchant' },
 ];
 
 export const SHAPES: Unlockable[] = [
@@ -74,6 +135,12 @@ export const SYMBOLS: Unlockable[] = [
   { id: 'key', name: 'Ключ', need: 3 },
   { id: 'wolf', name: 'Волк', need: 6 },
   { id: 'dragon', name: 'Дракон', need: 10 },
+  { id: 'helm', name: 'Шлем', need: 0, cls: 'knight' },
+  { id: 'cross', name: 'Крест', need: 0, cls: 'knight' },
+  { id: 'hat', name: 'Колпак', need: 0, cls: 'wizard' },
+  { id: 'moon', name: 'Полумесяц', need: 0, cls: 'wizard' },
+  { id: 'coin', name: 'Монета', need: 0, cls: 'merchant' },
+  { id: 'scales', name: 'Весы', need: 0, cls: 'merchant' },
 ];
 
 export interface BannerDef {
@@ -113,12 +180,18 @@ export function kingdomTone(colorId: string | undefined): { background: string; 
   return { background: hex, borderTopColor: light, borderLeftColor: light, borderRightColor: dark, borderBottomColor: dark, color: lum > 0.55 ? '#0b0a10' : '#fff7e6' };
 }
 
-export function isOpen(item: Unlockable, regalia: number): boolean {
-  return regalia >= item.need;
+export function isOpen(item: Unlockable, a: Access): boolean {
+  return item.cls ? a.cls === item.cls : a.reg >= item.need;
+}
+
+/** Скрытые украшения чужих путей не показываем вовсе. */
+export function visible<T extends Unlockable>(items: T[], a: Access): T[] {
+  return items.filter((i) => !i.cls || a.cls === i.cls);
 }
 
 export function nextUnlock(regalia: number): number | null {
   const all = [...COLORS, ...FORMS, ...TOWERS, ...SHAPES, ...PATTERNS, ...SYMBOLS]
+    .filter((i) => !i.cls)
     .map((i) => i.need)
     .filter((n) => n > regalia)
     .sort((a, b) => a - b);

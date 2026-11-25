@@ -743,7 +743,21 @@ textarea.input {
   border-bottom: 2px solid var(--line2);
 }
 
-.chron:last-child {
+.chron-day {
+  margin: 12px 0 0;
+  padding: 6px 8px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--gold);
+  background: linear-gradient(90deg, rgba(212, 175, 55, 0.14), transparent);
+  border-left: 3px solid var(--gold);
+}
+
+.chron-day:first-child {
+  margin-top: 4px;
+}
+
+.chron-wrap:last-child .chron {
   border-bottom: 0;
 }
 
@@ -1243,3 +1257,19 @@ textarea.input {
   .bene-lying .bene-sprite, .bene-jolt .bene-sprite, .bene-zzz span, .bene-bubble { animation: none; }
   .bene-zzz span { opacity: 1; }
 }
+
+/* выбор пути у Бенедикта */
+.bene-choices .cls-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  text-align: left;
+  line-height: 1.25;
+}
+.cls-card > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.cls-card b { font-size: 15px; }
+.cls-card small { font-family: var(--sans); font-size: 12px; font-weight: 400; color: #c3cde0; text-transform: none; letter-spacing: 0; }
+.cls-card .cls-opens { color: #8da0c4; font-size: 11px; }
+.cls-card svg { flex: none; width: 44px; height: auto; }
+.cls-card > span { flex: 1; align-items: flex-start; text-align: left; }

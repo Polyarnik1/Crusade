@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Banner, Tower } from '../art/heraldry';
 import { Icon, Sheet } from '../components/ui';
 import { regaliaCount } from '../game/achievements';
-import { COLORS, DEFAULT_BANNER, FORMS, PATTERNS, SHAPES, SYMBOLS, TOWERS, isOpen, type BannerDef, type Unlockable } from '../game/cosmetics';
+import { COLORS, DEFAULT_BANNER, FORMS, PATTERNS, SHAPES, SYMBOLS, TOWERS, isOpen, visible, type Access, type BannerDef, type Unlockable } from '../game/cosmetics';
 import { useGame } from '../game/store';
 
 const NAME_IDEAS = ['Северный Предел', 'Серая Застава', 'Медвежий Угол', 'Тихая Гавань', 'Ледяная Марка', 'Дворовый Форт'];
@@ -12,6 +12,7 @@ export function KingdomEditor() {
   const { s, act } = useGame();
   const k = s.kingdom;
   const reg = regaliaCount(s);
+  const acc: Access = { reg, cls: s.cls };
   const [name, setName] = useState(k?.name ?? '');
   const [form, setForm] = useState(k?.form ?? 'principality');
   const [tower, setTower] = useState(k?.tower ?? 'watch');
@@ -20,7 +21,7 @@ export function KingdomEditor() {
   const formDef = FORMS.find((f) => f.id === form)!;
   const ok = name.trim().length >= 2;
 
-  const lockedNote = (i: Unlockable) => (isOpen(i, reg) ? undefined : `откроется за ${i.need} регалий`);
+  const lockedNote = (i: Unlockable) => (isOpen(i, acc) ? undefined : `откроется за ${i.need} регалий`);
 
   return (
     <Sheet onClose={act.closeFounding} label={k ? 'Перестройка королевства' : 'Основание королевства'}>
@@ -58,8 +59,8 @@ export function KingdomEditor() {
 
       <Section title="Форма правления">
         <div className="chips">
-          {FORMS.map((f) => {
-            const open = isOpen(f, reg);
+          {visible(FORMS, acc).map((f) => {
+            const open = isOpen(f, acc);
             return (
               <button
                 key={f.id}
@@ -79,28 +80,28 @@ export function KingdomEditor() {
       </Section>
 
       <Section title="Цвет королевства">
-        <Swatches value={banner.color} reg={reg} onPick={(id) => set({ color: id })} />
+        <Swatches value={banner.color} acc={acc} onPick={(id) => set({ color: id })} />
         <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>
           Этим цветом подсветятся твои земли и у соседей на карте.
         </div>
       </Section>
 
       <Section title="Знамя">
-        <Picks items={SHAPES} value={banner.shape} reg={reg} onPick={(id) => set({ shape: id })} render={(i) => <Banner banner={{ ...banner, shape: i.id }} size={30} />} />
+        <Picks items={SHAPES} value={banner.shape} acc={acc} onPick={(id) => set({ shape: id })} render={(i) => <Banner banner={{ ...banner, shape: i.id }} size={30} />} />
         <div style={{ height: 10 }} />
-        <Picks items={PATTERNS} value={banner.pattern} reg={reg} onPick={(id) => set({ pattern: id })} render={(i) => <Banner banner={{ ...banner, pattern: i.id }} size={30} />} />
+        <Picks items={PATTERNS} value={banner.pattern} acc={acc} onPick={(id) => set({ pattern: id })} render={(i) => <Banner banner={{ ...banner, pattern: i.id }} size={30} />} />
         <div style={{ height: 10 }} />
-        <Picks items={SYMBOLS} value={banner.symbol} reg={reg} onPick={(id) => set({ symbol: id })} render={(i) => <Banner banner={{ ...banner, symbol: i.id }} size={30} />} />
+        <Picks items={SYMBOLS} value={banner.symbol} acc={acc} onPick={(id) => set({ symbol: id })} render={(i) => <Banner banner={{ ...banner, symbol: i.id }} size={30} />} />
         <div className="label" style={{ marginTop: 12 }}>
           Второй цвет
         </div>
         <div style={{ marginTop: 8 }}>
-          <Swatches value={banner.second} reg={reg} onPick={(id) => set({ second: id })} />
+          <Swatches value={banner.second} acc={acc} onPick={(id) => set({ second: id })} />
         </div>
       </Section>
 
       <Section title="Башни на карте">
-        <Picks items={TOWERS} value={tower} reg={reg} onPick={setTower} render={(i) => <Tower tower={i.id} color={banner.color} size={32} />} />
+        <Picks items={TOWERS} value={tower} acc={acc} onPick={setTower} render={(i) => <Tower tower={i.id} color={banner.color} size={32} />} />
       </Section>
 
       {!k && !s.land && (
@@ -137,11 +138,11 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-export function Swatches({ value, reg, onPick }: { value: string; reg: number; onPick: (id: string) => void }) {
+export function Swatches({ value, acc, onPick }: { value: string; acc: Access; onPick: (id: string) => void }) {
   return (
     <div className="chips">
-      {COLORS.map((c) => {
-        const open = isOpen(c, reg);
+      {visible(COLORS, acc).map((c) => {
+        const open = isOpen(c, acc);
         return (
           <button
             key={c.id}
@@ -163,20 +164,20 @@ export function Swatches({ value, reg, onPick }: { value: string; reg: number; o
 export function Picks({
   items,
   value,
-  reg,
+  acc,
   onPick,
   render,
 }: {
   items: Unlockable[];
   value: string;
-  reg: number;
+  acc: Access;
   onPick: (id: string) => void;
   render: (i: Unlockable) => React.ReactNode;
 }) {
   return (
     <div className="grid3">
-      {items.map((i) => {
-        const open = isOpen(i, reg);
+      {visible(items, acc).map((i) => {
+        const open = isOpen(i, acc);
         return (
           <button
             key={i.id}
@@ -188,6 +189,7 @@ export function Picks({
           >
             {render(i)}
             <span>{i.name}</span>
+            {i.cls && <small style={{ color: 'var(--gold)' }}>★ твой путь</small>}
             {!open && (
               <small className="row" style={{ gap: 4 }}>
                 <Icon name="lock" size={8} /> {i.need} регалий

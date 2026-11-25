@@ -1,7 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { REGALIA, dayKey } from './achievements';
 import type { SfxName } from '../audio/sfx';
-import { FORMS } from './cosmetics';
+import { CHRON, TAILED, TAILS, fill, walkKey, type ChronKey } from './chronicleLines';
+import { CLASSES, FORMS, type ClassId } from './cosmetics';
 import { newBene } from './benedict';
 import { CLOSE_DIST, MIN_LOOP_LEN, dist, formatArea, landArea, landCenter, loopPieces, merge, overlapArea, rect, subtract } from './geo';
 import { gloryForArea, gloryForDistance, titleOf } from './levels';
@@ -103,8 +104,18 @@ function today(d: GameState): DayActivity {
   return d.days[k];
 }
 
-function log(d: GameState, kind: ChronicleEntry['kind'], text: string) {
-  d.chronicle.unshift({ id: uid(), ts: Date.now(), kind, text });
+/** Запись в летописи слогом хроники: формулировка выбирается из набора и не повторяет предыдущую. */
+function chron(d: GameState, kind: ChronicleEntry['kind'], key: ChronKey, vars: Record<string, string | number | undefined> = {}, extra = '') {
+  const list = CHRON[key];
+  const last = d.chronicle.find((c) => c.key === key)?.v;
+  let v = Math.floor(Math.random() * list.length);
+  if (list.length > 1 && v === last) v = (v + 1 + Math.floor(Math.random() * (list.length - 1))) % list.length;
+  const k = d.kingdom?.name ?? '';
+  const form = (FORMS.find((f) => f.id === d.kingdom?.form)?.name ?? 'государство').toLowerCase();
+  let text = fill(list[v], { k, r: rulerOf(d), form, ...vars });
+  if (extra) text += ' ' + extra;
+  if (TAILED.includes(key) && Math.random() < 0.14) text += ' ' + TAILS[Math.floor(Math.random() * TAILS.length)];
+  d.chronicle.unshift({ id: uid(), ts: Date.now(), kind, text, key, v });
   if (d.chronicle.length > 300) d.chronicle.length = 300;
 }
 
@@ -125,7 +136,7 @@ function capture(d: GameState, ring: LatLng[]): boolean {
       if (overlapArea(n.land, piece) > 50) {
         n.land = subtract(n.land, piece);
         if (!d.flags.tookFromNeighbor) d.flags.tookFromNeighbor = true;
-        log(d, 'border', `Ты отвоевал земли у владений «${n.name}» (${n.ruler}).`);
+        chron(d, 'border', 'takeNeighbor', { n: n.name, nr: n.ruler });
         toast(d, 'Граница сдвинулась', `Часть земель «${n.name}» теперь твоя`, 'border');
       }
     }
@@ -146,7 +157,7 @@ function capture(d: GameState, ring: LatLng[]): boolean {
   }
   const g = gloryForArea(gained);
   d.glory += g;
-  log(d, 'capture', `Захвачен удел: +${formatArea(gained)}, +${g} славы.`);
+  chron(d, 'capture', 'capture', { area: formatArea(gained), g });
   toast(d, `Новый удел! +${g} славы`, `+${formatArea(gained)} к владениям`, 'capture');
   return true;
 }
@@ -171,13 +182,13 @@ function checkExile(d: GameState) {
     d.land = null;
     d.totalArea = 0;
     const r = rulerOf(d);
-    log(d, 'border', `${r} «${d.kingdom.name}» лишился всех земель и стал правителем в изгнании.`);
+    chron(d, 'border', 'exile');
     toast(d, `${r} в изгнании`, 'Земель не осталось. Захвати любой клочок, чтобы вернуть владения', 'exile');
   } else if (has && d.flags.exiled) {
     d.flags.exiled = false;
     d.flags.returned = true;
     const r = rulerOf(d);
-    log(d, 'border', `${r} вернулся из изгнания: у «${d.kingdom.name}» снова есть земля.`);
+    chron(d, 'border', 'returned');
     toast(d, 'Владения возвращены', `${r} снова правит`, 'restore');
   }
 }
@@ -189,7 +200,7 @@ function postProcess(d: GameState, prevGlory: number) {
   if (!d.weeklyClaimed.includes(wk) && weeklyCaptures(d) >= WEEKLY_GOAL) {
     d.weeklyClaimed.push(wk);
     d.glory += WEEKLY_REWARD;
-    log(d, 'quest', `Недельный вызов выполнен: +${WEEKLY_REWARD} славы.`);
+    chron(d, 'quest', 'weekly', { g: WEEKLY_REWARD });
     toast(d, 'Недельный вызов выполнен', `+${WEEKLY_REWARD} славы`, 'quest');
   }
   // регалии (по кругу, т.к. одна может открыть другую, например «Слава в веках»)
@@ -199,7 +210,7 @@ function postProcess(d: GameState, prevGlory: number) {
       if (r.check(d)) {
         d.unlocked[r.id] = Date.now();
         d.ui.unlockQueue.push(r.id);
-        log(d, 'regalia', `Получена регалия «${r.name}».`);
+        chron(d, 'regalia', 'regalia', { reg: r.name });
         if (d.walk) toast(d, 'Новая регалия!', r.name, 'regalia');
       }
     }
@@ -207,7 +218,7 @@ function postProcess(d: GameState, prevGlory: number) {
   const was = titleOf(prevGlory);
   const now = titleOf(d.glory);
   if (now.level > was.level) {
-    log(d, 'title', `Новый титул: ${now.name}.`);
+    chron(d, 'title', 'title', { title: now.name });
     toast(d, `Новый титул: ${now.name}`, `Уровень ${now.level}`, 'title');
   }
 }
@@ -349,7 +360,7 @@ function useGameState() {
             if (!day.goalRewarded && day.walkedM >= goal) {
               day.goalRewarded = true;
               d.glory += DAILY_GOAL_REWARD;
-              log(d, 'quest', `Поход дня выполнен: ${d.settings.dailyGoalKm} км, +${DAILY_GOAL_REWARD} славы.`);
+              chron(d, 'quest', 'daily', { goal: d.settings.dailyGoalKm, g: DAILY_GOAL_REWARD });
               toast(d, 'Поход дня выполнен', `+${DAILY_GOAL_REWARD} славы`, 'quest');
             }
           }
@@ -397,12 +408,13 @@ function useGameState() {
             startPos: w.track[0],
           });
           if (d.walks.length > 100) d.walks.length = 100;
-          log(
+          const km = w.distance / 1000;
+          chron(
             d,
             'walk',
-            `Поход окончен: ${(w.distance / 1000).toFixed(2).replace('.', ',')} км` +
-              (w.loops ? `, уделов: ${w.loops}` : '') +
-              (g ? `, +${g} славы.` : '.'),
+            walkKey(km),
+            { km: km.toFixed(2).replace('.', ',') },
+            (w.loops ? `Замкнуто уделов: ${w.loops}.` : '') + (g ? `${w.loops ? ' ' : ''}Слава: +${g}.` : ''),
           );
           d.walk = null;
           if (!d.kingdom) d.ui.showFounding = true;
@@ -437,10 +449,10 @@ function useGameState() {
             for (const n of d.neighbors) if (overlapArea(n.land, cap) > 50) n.land = subtract(n.land, cap);
             d.land = merge(d.land, cap);
             d.totalArea = landArea(d.land);
-            log(d, 'capture', `Заложена столица: ${formatArea(landArea(cap))} вокруг места основания.`);
+            chron(d, 'capture', 'capital', { area: formatArea(landArea(cap)) });
           }
           if (isNew) {
-            log(d, 'kingdom', `Основано государство «${k.name}».`);
+            chron(d, 'kingdom', 'founded');
             toast(d, 'Королевство основано', k.name, 'found');
           }
         }),
@@ -454,8 +466,28 @@ function useGameState() {
 
       meetBenedict: (met = true, sulk = false) =>
         mutate((d) => {
+          if (met && !d.flags.metBenedict) chron(d, 'bene', 'bene');
           d.flags.metBenedict = met;
           if (met) d.bene = d.bene ? { ...d.bene, sulkUntil: newBene(sulk).sulkUntil } : newBene(sulk);
+        }),
+      chooseClass: (c: ClassId) =>
+        mutate((d) => {
+          if (d.cls) return;
+          d.cls = c;
+          const def = CLASSES.find((x) => x.id === c)!;
+          chron(d, 'class', 'class', { cls: def.name });
+          toast(d, `Путь выбран: ${def.name}`, 'В редакторе королевства открылись скрытые украшения', 'regalia');
+        }),
+      deferClass: () =>
+        mutate((d) => {
+          d.flags.clsDefer = dayKey();
+        }),
+      // для разработки: снова предложить выбор пути
+      askClass: () =>
+        mutate((d) => {
+          d.cls = undefined;
+          d.flags.clsDefer = undefined;
+          d.flags.clsNow = true;
         }),
       saveBene: (b: BeneState) =>
         mutate((d) => {
