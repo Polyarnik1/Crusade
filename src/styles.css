@@ -1276,6 +1276,7 @@ textarea.input {
 
 /* поздравление с выбранным путём */
 .path-back {
+  --lag: 1s; /* окно ждёт, пока Бенедикт уйдёт, а затемнение уже держится */
   position: absolute;
   inset: 0;
   z-index: 1550;
@@ -1296,7 +1297,7 @@ textarea.input {
   border: 4px solid var(--pc);
   border-bottom-width: 8px;
   box-shadow: 0 0 0 3px #0a0b12, 0 0 40px color-mix(in srgb, var(--pc) 35%, transparent);
-  animation: path-rise 0.75s cubic-bezier(0.2, 1.25, 0.4, 1) 0.1s both;
+  animation: path-rise 0.75s cubic-bezier(0.2, 1.25, 0.4, 1) calc(var(--lag) + 0.1s) both;
 }
 .path-out { animation: path-fade-out 0.4s ease-in forwards; }
 .path-out .path-card { animation: path-sink 0.4s ease-in forwards; }
@@ -1314,7 +1315,7 @@ textarea.input {
   inset: 0;
   background: linear-gradient(105deg, transparent 35%, rgba(255, 240, 200, 0.22) 50%, transparent 65%);
   transform: translateX(-120%);
-  animation: path-sheen 1.6s ease-out 0.7s both;
+  animation: path-sheen 1.6s ease-out calc(var(--lag) + 0.7s) both;
   pointer-events: none;
 }
 @keyframes path-sheen { to { transform: translateX(120%); } }
@@ -1327,7 +1328,7 @@ textarea.input {
   font-size: 20px;
   color: #fff4d0;
   text-shadow: 0 2px 0 #000, 0 0 12px var(--pc);
-  animation: path-pop 0.6s cubic-bezier(0.2, 1.6, 0.4, 1) 0.55s both;
+  animation: path-pop 0.6s cubic-bezier(0.2, 1.6, 0.4, 1) calc(var(--lag) + 0.55s) both;
 }
 @keyframes path-pop {
   from { transform: scale(0.4); opacity: 0; }
@@ -1340,9 +1341,9 @@ textarea.input {
   line-height: 1.05;
   color: var(--pc);
   text-shadow: 0 2px 0 #000;
-  animation: path-pop 0.5s cubic-bezier(0.2, 1.5, 0.4, 1) 0.7s both;
+  animation: path-pop 0.5s cubic-bezier(0.2, 1.5, 0.4, 1) calc(var(--lag) + 0.7s) both;
 }
-.path-motto { margin-top: 8px; border-left-color: var(--pc); font-size: 14px; padding: 10px 12px; animation: path-in 0.5s ease-out 0.8s both; }
+.path-motto { margin-top: 8px; border-left-color: var(--pc); font-size: 14px; padding: 10px 12px; animation: path-in 0.5s ease-out calc(var(--lag) + 0.8s) both; }
 .path-lines p { margin: 8px 0 0; font-size: 14px; line-height: 1.4; color: #d9d3c4; }
 .path-in { animation: path-in 0.45s ease-out both; }
 @keyframes path-in {

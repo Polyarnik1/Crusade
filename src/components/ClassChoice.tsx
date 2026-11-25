@@ -60,7 +60,7 @@ const PATH: Record<ClassId, { title: string; accent: string; motto: string; line
   },
 };
 
-export function ClassDialog({ onDone }: { onDone: (chosen: boolean) => void }) {
+export function ClassDialog({ onDone, onLeaving }: { onDone: () => void; onLeaving: (chosen: boolean) => void }) {
   const { act } = useGame();
   const [node, setNode] = useState<'ask' | 'confirm' | 'bye'>('ask');
   const [picked, setPicked] = useState<ClassId | null>(null);
@@ -106,7 +106,8 @@ export function ClassDialog({ onDone }: { onDone: (chosen: boolean) => void }) {
     closing.current = true;
     setPhase('out');
     music.fadeOut(2.6);
-    setTimeout(() => onDone(chosen.current), 1200);
+    onLeaving(chosen.current); // затемнение под Бенедиктом остаётся, пока не выедет окно пути
+    setTimeout(onDone, 1200);
   };
 
   const tap = () => {
@@ -235,7 +236,7 @@ export function PathSheet({ cls, onClose }: { cls: ClassId; onClose: () => void 
   const [out, setOut] = useState(false);
 
   useEffect(() => {
-    const t = setTimeout(() => sfx.play('title'), 250);
+    const t = setTimeout(() => sfx.play('title'), 1250);
     return () => clearTimeout(t);
   }, []);
 
@@ -250,7 +251,7 @@ export function PathSheet({ cls, onClose }: { cls: ClassId; onClose: () => void 
   };
 
   let n = 0;
-  const d = () => ({ animationDelay: `${0.9 + n++ * 0.12}s` });
+  const d = () => ({ animationDelay: `calc(var(--lag) + ${0.9 + n++ * 0.12}s)` });
 
   return (
     <div className={'path-back' + (out ? ' path-out' : '')}>

@@ -128,12 +128,7 @@ export function App() {
       )}
       {visit && <BenedictVisit onDone={() => setVisit(false)} />}
       {pickClass && (
-        <ClassDialog
-          onDone={(chosen) => {
-            setPickClass(false);
-            if (chosen) setPathDone(true);
-          }}
-        />
+        <ClassDialog onLeaving={(chosen) => chosen && setPathDone(true)} onDone={() => setPickClass(false)} />
       )}
       {pathDone && s.cls && <PathSheet cls={s.cls} onClose={() => setPathDone(false)} />}
     </div>
