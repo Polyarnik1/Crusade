@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { Tower } from '../art/heraldry';
+import { Banner, Tower } from '../art/heraldry';
+import { SceneArt } from '../art/SceneArt';
 import { music } from '../audio/music';
 import { sfx } from '../audio/sfx';
-import { CLASSES, type ClassId } from '../game/cosmetics';
+import { CLASSES, COLORS, DEFAULT_BANNER, FORMS, SYMBOLS, TOWERS, type ClassId } from '../game/cosmetics';
 import { useGame } from '../game/store';
 import { Sprite } from './Benedict';
 
@@ -23,7 +24,43 @@ const CONFIRM: Record<ClassId, string> = {
 
 const BYE = ['Путь выбран. Дальше пойдёшь сам. Я рядом — в тени.'];
 
-export function ClassDialog({ onDone }: { onDone: () => void }) {
+const PATH: Record<ClassId, { title: string; accent: string; motto: string; lines: string[]; go: string }> = {
+  knight: {
+    title: 'Путь рыцаря',
+    accent: '#d84430',
+    motto: 'Пока знамя поднято — держава стоит.',
+    lines: [
+      'Ты выбрал сталь и честь. Каждая прогулка теперь — дозор по твоим землям.',
+      'Рыцарь не ждёт, пока враг постучит в ворота. Он выходит первым — даже под дождём.',
+      'Береги серию, как знамя: упавшее, его тяжело поднять.',
+    ],
+    go: 'В дозор!',
+  },
+  wizard: {
+    title: 'Путь чародея',
+    accent: '#8f8cff',
+    motto: 'Звёзды смотрят на тех, кто идёт ночью.',
+    lines: [
+      'Ты выбрал тайну. Мир для тебя — карта знаков: тропинки, тени, странная погода.',
+      'Чародей видит узор там, где другие видят улицу. Замыкай круги — в них сила.',
+      'И не обижай Бенедикта. Слепые провидцы — лучшие коллеги.',
+    ],
+    go: 'К звёздам!',
+  },
+  merchant: {
+    title: 'Путь торговца',
+    accent: '#e3b341',
+    motto: 'Каждая дорога ведёт к выгоде — надо лишь пройти её.',
+    lines: [
+      'Ты выбрал дороги и звон монет. Земля — лучший товар: новой больше не делают.',
+      'Торговец знает цену шагу. Километр сегодня — удел завтра, слава послезавтра.',
+      'Соседи — не враги. Это будущие покупатели. Пока что.',
+    ],
+    go: 'В путь!',
+  },
+};
+
+export function ClassDialog({ onDone }: { onDone: (chosen: boolean) => void }) {
   const { act } = useGame();
   const [node, setNode] = useState<'ask' | 'confirm' | 'bye'>('ask');
   const [picked, setPicked] = useState<ClassId | null>(null);
@@ -31,6 +68,7 @@ export function ClassDialog({ onDone }: { onDone: () => void }) {
   const [shown, setShown] = useState(0);
   const [phase, setPhase] = useState<'in' | 'talk' | 'out'>('in');
   const closing = useRef(false);
+  const chosen = useRef(false);
 
   const lines = node === 'ask' ? ASK : node === 'confirm' ? [CONFIRM[picked ?? 'knight']] : BYE;
   const text = lines[line];
@@ -68,7 +106,7 @@ export function ClassDialog({ onDone }: { onDone: () => void }) {
     closing.current = true;
     setPhase('out');
     music.fadeOut(2.6);
-    setTimeout(onDone, 1200);
+    setTimeout(() => onDone(chosen.current), 1200);
   };
 
   const tap = () => {
@@ -153,7 +191,10 @@ export function ClassDialog({ onDone }: { onDone: () => void }) {
                 onClick={(e) => {
                   stop(e);
                   sfx.play('dlgNext');
-                  if (picked) act.chooseClass(picked);
+                  if (picked) {
+                    act.chooseClass(picked);
+                    chosen.current = true;
+                  }
                   go('bye');
                 }}
               >
@@ -176,6 +217,96 @@ export function ClassDialog({ onDone }: { onDone: () => void }) {
 
           {!(done && last && node !== 'bye') && <div className="bene-more">{done ? '▼' : ''}</div>}
         </div>
+      </div>
+    </div>
+  );
+}
+
+/** Поздравление после выбора пути: выезжает, когда Бенедикт ушёл. */
+export function PathSheet({ cls, onClose }: { cls: ClassId; onClose: () => void }) {
+  const { s, act } = useGame();
+  const p = PATH[cls];
+  const def = CLASSES.find((c) => c.id === cls)!;
+  const form = FORMS.find((f) => f.cls === cls)!;
+  const tower = TOWERS.find((t) => t.cls === cls)!;
+  const syms = SYMBOLS.filter((x) => x.cls === cls);
+  const cols = COLORS.filter((x) => x.cls === cls);
+  const base = s.kingdom?.banner ?? DEFAULT_BANNER;
+  const [out, setOut] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => sfx.play('title'), 250);
+    return () => clearTimeout(t);
+  }, []);
+
+  const close = (edit: boolean) => {
+    if (out) return;
+    sfx.play('close');
+    setOut(true);
+    setTimeout(() => {
+      onClose();
+      if (edit) act.openFounding();
+    }, 420);
+  };
+
+  let n = 0;
+  const d = () => ({ animationDelay: `${0.9 + n++ * 0.12}s` });
+
+  return (
+    <div className={'path-back' + (out ? ' path-out' : '')}>
+      <div className="path-card" role="dialog" aria-modal="true" aria-label={p.title} style={{ '--pc': p.accent } as React.CSSProperties}>
+        <div className="path-scene">
+          <SceneArt id={'path_' + cls} />
+          <div className="path-badge pf">Путь избран</div>
+        </div>
+        <div className="path-body">
+          <div className="path-title pf">{p.title}</div>
+          <blockquote className="quote path-motto">«{p.motto}»</blockquote>
+          <div className="path-lines">
+            {p.lines.map((l) => (
+              <p key={l} className="path-in" style={d()}>
+                {l}
+              </p>
+            ))}
+          </div>
+          <div className="label path-in" style={{ ...d(), marginTop: 14 }}>
+            Открыто для «{s.kingdom?.name ?? 'державы'}»
+          </div>
+          <div className="path-unlocks">
+            <div className="path-item path-in" style={d()}>
+              <Tower tower={tower.id} color={base.color} size={40} />
+              <span>{tower.name}</span>
+            </div>
+            {syms.map((x) => (
+              <div key={x.id} className="path-item path-in" style={d()}>
+                <Banner banner={{ ...base, symbol: x.id, color: cols[0].id, second: cols[1].id }} size={34} />
+                <span>{x.name}</span>
+              </div>
+            ))}
+            <div className="path-item path-in" style={d()}>
+              <div className="path-swatches">
+                {cols.map((c) => (
+                  <i key={c.id} style={{ background: c.hex }} />
+                ))}
+              </div>
+              <span>
+                {cols[0].name} и {cols[1].name.toLowerCase()}
+              </span>
+            </div>
+          </div>
+          <div className="path-form path-in" style={d()}>
+            Новая форма правления: <b>{form.name}</b> · {form.ruler} {s.hero.name}
+          </div>
+          <div className="path-in" style={d()}>
+            <button type="button" className="btn btn-gold btn-block" style={{ marginTop: 12 }} onClick={() => close(true)}>
+              Украсить королевство
+            </button>
+            <button type="button" className="btn btn-block" style={{ marginTop: 8 }} onClick={() => close(false)}>
+              {p.go}
+            </button>
+          </div>
+        </div>
+        <span className="sr-only">{def.name}</span>
       </div>
     </div>
   );

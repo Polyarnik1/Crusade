@@ -755,6 +755,118 @@ Object.assign(SCENES2, {
   },
 });
 
+// ── сцены выбора пути (рыцарь, чародей, торговец) ──
+Object.assign(SCENES2, {
+  path_knight: {
+    draw: (s: Scene2) => {
+      dusk(s, 120, 62, 11, 'dawn');
+      range(s, 66, 16, { seed: 61, snow: false });
+      s.fog(64, 4, 0.6);
+      s.hill((x) => 66 - 9 * Math.exp(-Math.pow((x - 122) / 22, 2)), M.GROUND, { lift: 0.2 });
+      s.castle(122, 58, 0.95, { win: 0.45, flag: M.RED });
+      s.hill((x) => 78 + Math.sin(x * 0.05) * 2, M.GROUND, { lift: 0.22 });
+      road(s, 70, 122, 82, M.GROUND, 0.5, 6);
+      s.pines(80, { x0: -6, x1: 34, hMin: 14, hMax: 24 });
+      rockyGround(s, (x) => 92 + Math.sin(x * 0.08) * 1.2, M.GROUND, 26);
+      banner(s, 52, 96, 34, M.RED, 11, 0.6);
+      banner(s, 110, 96, 34, M.RED, 11, 2.1);
+      knightStand(s, 80, 99, 0.95, { sword: true });
+    },
+  },
+  path_wizard: {
+    draw: (s: Scene2) => {
+      s.sky('deep', H * 0.7);
+      s.stars(180, H * 0.62);
+      s.bigMoon(34, 22, 9, { shadow: 0.55 });
+      s.clouds(32, 52, { cover: 0.3, sx: 0.025, sy: 0.1 });
+      range(s, 66, 12, { seed: 63 });
+      s.fog(64, 4, 0.5);
+      // скала и башня чародея
+      s.poly([[86, 100], [92, 74], [102, 66], [120, 64], [134, 70], [142, 100]], M.MTN, 0.26, { tex: rockTex(12), flat: 0.2, tilt: [-0.3, -0.35] });
+      const tx = 114, tb = 66;
+      s.block(tx - 6, tb - 14, tx + 6, tb, M.STONE, { lift: 0.04 });
+      s.block(tx - 5, tb - 40, tx + 5, tb - 14, M.STONE, { lift: 0.06 });
+      s.cap(tx - 7, tb - 14, tx + 7, tb - 14, 0.6, 0.6, M.STONE, 0.42);
+      s.cap(tx - 6, tb - 40, tx + 6, tb - 40, 0.7, 0.7, M.STONE, 0.45);
+      s.cone(tx, tb - 41, 7, 18, M.BLUE, 0.06);
+      for (let i = 0; i < 4; i++) s.put(tx + 2 - i, tb - 50 + i * 2, M.GOLD, 0.7);
+      s.put(tx, tb - 60, M.STAR, 1);
+      s.put(tx, tb - 61, M.STAR, 0.8);
+      // светящееся окно наверху и окна ниже
+      s.rect(tx - 2, tb - 35, tx + 1, tb - 30, M.WINDOW, 0.95);
+      s.rect(tx - 1, tb - 36, tx, tb - 36, M.WINDOW, 0.8);
+      s.lights.push({ x: tx, y: tb - 33, r: 26, s: 0.9 });
+      s.rect(tx - 1, tb - 24, tx, tb - 22, M.WINDOW, 0.75);
+      s.lights.push({ x: tx, y: tb - 23, r: 8, s: 0.35 });
+      s.rect(tx - 2, tb - 6, tx + 1, tb, M.VOID, 0);
+      // кольцо парящих рун вокруг шпиля
+      for (let i = 0; i < 14; i++) {
+        const a = (i / 14) * Math.PI * 2;
+        const x = Math.round(tx + Math.cos(a) * 15);
+        const y = Math.round(tb - 33 + Math.sin(a) * 5);
+        if (Math.sin(a) > 0.2 && Math.abs(x - tx) < 6) continue;
+        s.put(x, y, M.STAR, 0.95);
+        s.put(x + 1, y, M.ICE, 0.7);
+        if (i % 3 === 0) s.put(x, y - 1, M.STAR, 0.8);
+      }
+      rockyGround(s, (x) => 88 + Math.sin(x * 0.06) * 1.5, M.GROUND, 30);
+      s.pines(90, { x0: -6, x1: 22, hMin: 16, hMax: 26 });
+      knightStand(s, 50, 100, 0.85, { cape: M.BLUE });
+    },
+  },
+  path_merchant: {
+    draw: (s: Scene2) => {
+      dusk(s, 30, 60, 11);
+      range(s, 64, 12, { seed: 65, snow: false });
+      s.hill((x) => 66 + Math.sin(x * 0.04) * 1.5, M.GROUND, { lift: 0.2 });
+      // дальний торговый город
+      for (const [x, w, h] of [[100, 7, 7], [108, 6, 9], [115, 8, 6], [124, 6, 8], [131, 7, 10], [139, 6, 7], [146, 8, 8]] as [number, number, number][]) s.house(x, 66, w, h);
+      s.tower(136, 66, 2, 16, { roof: 'cone', win: 0.4, flag: M.RED });
+      road(s, 66, 120, 60, M.GROUND, 0.5, 8);
+      rockyGround(s, (x) => 86 + Math.sin(x * 0.07) * 1.2, M.GROUND, 20);
+      // повозка с полосатым тентом
+      const cx = 104, cb = 94, k = 1.35;
+      const R = (n: number) => Math.round(n * k);
+      s.block(cx - R(16), cb - R(11), cx + R(12), cb - R(5), M.WOOD, { brick: false, lift: 0.14 });
+      for (let x = cx - R(16); x <= cx + R(12); x += 5) s.cap(x, cb - R(11), x, cb - R(5), 0.4, 0.4, M.WOOD, 0.24);
+      const th = R(14), tw = R(15);
+      for (let y = 0; y <= th; y++) {
+        const hw = tw * Math.sqrt(1 - Math.pow(y / th, 2));
+        for (let x = Math.round(cx - 2 - hw); x <= cx - 2 + hw; x++) {
+          const stripe = Math.floor((x - cx + 60) / 5) % 2 === 0;
+          s.putN(x, cb - R(11) - y, stripe ? M.PARCH : M.RED, stripe ? 0.66 : 0.5, (x - cx + 2) / (tw + 1), -y / th);
+        }
+      }
+      for (const wx of [cx - R(10), cx + R(6)]) {
+        for (let a = 0; a < 60; a++) {
+          const t = (a / 60) * Math.PI * 2;
+          s.put(Math.round(wx + Math.cos(t) * R(4.5)), Math.round(cb - R(2) + Math.sin(t) * R(4.5)), M.METAL, 0.5 + Math.max(0, -Math.sin(t)) * 0.25);
+        }
+        s.line(wx - R(4), cb - R(2), wx + R(4), cb - R(2), M.WOOD, 0.5);
+        s.line(wx, cb - R(6), wx, cb + R(2), M.WOOD, 0.5);
+        s.ell(wx, cb - R(2), 1.2, 1.2, M.METAL, 0.65);
+      }
+      s.cap(cx + R(12), cb - R(6), cx + R(24), cb - R(3), 0.7, 0.6, M.WOOD, 0.4);
+      // фонарь на повозке
+      s.cap(cx + R(12), cb - R(11), cx + R(12), cb - R(22), 0.5, 0.5, M.WOOD, 0.4);
+      s.rect(cx + R(12) + 1, cb - R(22), cx + R(12) + 3, cb - R(19), M.WINDOW, 0.98);
+      s.lights.push({ x: cx + R(12) + 2, y: cb - R(20), r: 30, s: 1 });
+      // ящики и мешок с монетами
+      s.block(cx - 46, cb - 8, cx - 37, cb + 1, M.WOOD, { brick: false, lift: 0.16 });
+      s.block(cx - 44, cb - 14, cx - 37, cb - 8, M.WOOD, { brick: false, lift: 0.2 });
+      s.ell(cx - 30, cb - 3, 4.5, 4, M.PARCH, 0.55);
+      s.ell(cx - 30, cb - 7, 1.5, 1, M.PARCH, 0.45);
+      for (const [x, y] of [[-34, 1], [-33, 0], [-31, 1], [-28, 1], [-29, 0], [-27, 2], [-35, 2], [-30, -1], [-32, 2], [-26, 1]] as [number, number][]) s.put(cx + x, cb + y, M.GOLD, 0.78 + hash(x, y, 3) * 0.2);
+      // уличный фонарь
+      s.cap(40, cb - 26, 40, cb + 2, 0.6, 0.7, M.WOOD, 0.4);
+      s.cap(40, cb - 26, 44, cb - 26, 0.5, 0.5, M.WOOD, 0.4);
+      s.rect(43, cb - 25, 45, cb - 21, M.WINDOW, 0.98);
+      s.lights.push({ x: 44, y: cb - 23, r: 30, s: 1 });
+      knightStand(s, 24, 100, 0.85, {});
+    },
+  },
+});
+
 // эффекты частиц, источники искр и «мигалка» в щели шлема
 export const FX2: Record<string, { fx: string; emit?: [number, number]; subject?: boolean; glow?: [number, number, number, number]; sparkle?: [number, number][] }> = {
   fire_keeper: { fx: 'embers', emit: [100, 84], subject: true },
@@ -792,4 +904,7 @@ export const FX2: Record<string, { fx: string; emit?: [number, number]; subject?
   riddle1: { fx: 'fireflies', sparkle: [[102, 56]] },
   riddle3: { fx: 'stars', sparkle: [[81, 52]] },
   riddle7: { fx: 'stars', glow: [94, 55, 5, 1] },
+  path_knight: { fx: 'dust', sparkle: [[80, 72]] },
+  path_wizard: { fx: 'stars', glow: [113, 33, 6, 1], sparkle: [[114, 6], [99, 33], [129, 33]] },
+  path_merchant: { fx: 'fireflies', sparkle: [[71, 95], [76, 94], [125, 66]] },
 };

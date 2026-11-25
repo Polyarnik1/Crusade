@@ -476,7 +476,6 @@ function useGameState() {
           d.cls = c;
           const def = CLASSES.find((x) => x.id === c)!;
           chron(d, 'class', 'class', { cls: def.name });
-          toast(d, `Путь выбран: ${def.name}`, 'В редакторе королевства открылись скрытые украшения', 'regalia');
         }),
       deferClass: () =>
         mutate((d) => {

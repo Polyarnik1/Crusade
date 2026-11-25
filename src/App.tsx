@@ -3,7 +3,7 @@ import { sfx } from './audio/sfx';
 import { music } from './audio/music';
 import { BenedictDialog } from './components/Benedict';
 import { BenedictVisit } from './components/BenedictVisit';
-import { ClassDialog } from './components/ClassChoice';
+import { ClassDialog, PathSheet } from './components/ClassChoice';
 import { dayKey } from './game/achievements';
 import { sulking, sulkLeft } from './game/benedict';
 import { SULK } from './game/benedictLines';
@@ -62,6 +62,7 @@ export function App() {
     !!s.kingdom && !!s.flags.metBenedict && !s.cls && (daysPlayed >= 5 || !!s.flags.clsNow) && s.flags.clsDefer !== dayKey() &&
     !unlock && !s.ui.showFounding && !s.walk && tab === 'map' && !benedict && !visit;
   const [pickClass, setPickClass] = useState(false);
+  const [pathDone, setPathDone] = useState(false);
   useEffect(() => {
     if (!classDue) return;
     music.preload();
@@ -102,7 +103,7 @@ export function App() {
       <Toasts />
 
       {s.ui.showFounding && !unlock && <KingdomEditor />}
-      {unlock && !visit && !benedict && !pickClass && (
+      {unlock && !visit && !benedict && !pickClass && !pathDone && (
         <RegaliaSheet
           r={unlock}
           fresh
@@ -126,7 +127,15 @@ export function App() {
         />
       )}
       {visit && <BenedictVisit onDone={() => setVisit(false)} />}
-      {pickClass && <ClassDialog onDone={() => setPickClass(false)} />}
+      {pickClass && (
+        <ClassDialog
+          onDone={(chosen) => {
+            setPickClass(false);
+            if (chosen) setPathDone(true);
+          }}
+        />
+      )}
+      {pathDone && s.cls && <PathSheet cls={s.cls} onClose={() => setPathDone(false)} />}
     </div>
   );
 }
