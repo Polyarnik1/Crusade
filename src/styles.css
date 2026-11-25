@@ -1373,3 +1373,9 @@ textarea.input {
   .path-card, .path-in, .path-title, .path-badge, .path-motto, .path-scene::after { animation: none; }
 }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Отдельная благодарность */
+.thanks-list { display: flex; flex-direction: column; gap: 8px; max-height: 46vh; overflow-y: auto; }
+.thanks-item, .thanks-empty { padding: 10px 12px; text-align: center; background: var(--bg); border: 3px solid var(--gold); border-bottom-width: 5px; }
+.thanks-empty { border-style: dashed; }
+.thanks-name { color: var(--gold); font-size: 15px; letter-spacing: 0.5px; }

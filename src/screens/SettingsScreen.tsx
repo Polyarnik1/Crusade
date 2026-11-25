@@ -7,6 +7,7 @@ import { SOURCE_LABEL, type MapSource } from '../art/tiles';
 import { Icon, Sheet, Switch } from '../components/ui';
 import { regaliaCount } from '../game/achievements';
 import { TOWERS } from '../game/cosmetics';
+import { PATRONS } from '../game/patrons';
 import { useGame } from '../game/store';
 import { Picks } from './KingdomEditor';
 
@@ -17,6 +18,7 @@ export function SettingsScreen({ onBack }: { onBack: () => void }) {
   const file = useRef<HTMLInputElement>(null);
   const [confirmReset, setConfirmReset] = useState(false);
   const [donate, setDonate] = useState(false);
+  const [thanks, setThanks] = useState(false);
   const [msg, setMsg] = useState('');
 
   const exportData = () => {
@@ -189,10 +191,13 @@ export function SettingsScreen({ onBack }: { onBack: () => void }) {
           <div className="h2">Поддержать проект</div>
         </div>
         <p style={{ fontSize: 14, lineHeight: 1.5, margin: '12px 0', color: '#d5dae2' }}>
-          Здесь нет рекламы и платных функций. Донат ничего не открывает, кроме регалии «Меценат» в профиле.
+          Здесь нет рекламы и платных функций. Донат ничего не открывает, кроме регалии «Меценат» в профиле и места в «Отдельной благодарности».
         </p>
         <button type="button" className="btn btn-gold btn-block" onClick={() => setDonate(true)}>
           Поддержать
+        </button>
+        <button type="button" className="btn btn-block btn-sm" style={{ marginTop: 8 }} onClick={() => setThanks(true)}>
+          Отдельная благодарность
         </button>
       </div>
 
@@ -224,11 +229,38 @@ export function SettingsScreen({ onBack }: { onBack: () => void }) {
         </Sheet>
       )}
 
+      {thanks && (
+        <Sheet onClose={() => setThanks(false)} label="Отдельная благодарность" center>
+          <div className="h2" style={{ fontSize: 24 }}>Отдельная благодарность</div>
+          <p className="muted" style={{ fontSize: 13, lineHeight: 1.5, margin: '6px 0 12px' }}>
+            Имена тех, кто заварил Бенедикту чайник, вырезаны на этой стене.
+          </p>
+          {PATRONS.length ? (
+            <div className="thanks-list">
+              {PATRONS.map((p) => (
+                <div key={p.name} className="thanks-item">
+                  <div className="thanks-name pf">★ {p.name}</div>
+                  {p.note && <div className="muted" style={{ fontSize: 12 }}>{p.note}</div>}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="thanks-empty">
+              <div className="thanks-name pf">★ ★ ★</div>
+              <p style={{ fontSize: 14, lineHeight: 1.5, margin: '8px 0 0' }}>Стена пока пуста. Первое место на ней свободно.</p>
+            </div>
+          )}
+          <button type="button" className="btn btn-gold btn-block" style={{ marginTop: 14 }} onClick={() => setThanks(false)}>
+            Закрыть
+          </button>
+        </Sheet>
+      )}
+
       {donate && (
         <Sheet onClose={() => setDonate(false)} label="Поддержать проект" center>
           <div className="h2" style={{ fontSize: 24 }}>Казна скоро откроется</div>
           <p style={{ lineHeight: 1.5, fontSize: 14 }}>
-            Приём донатов подключим вместе с сервером. Спасибо, что хочешь поддержать — регалия «Меценат» уже ждёт тебя.
+            Приём донатов подключим вместе с сервером. Спасибо, что хочешь поддержать: регалия «Меценат» уже ждёт тебя, а ник можно будет указать в сообщении к донату, и он попадёт на стену.
           </p>
           <button type="button" className="btn btn-gold btn-block" onClick={() => setDonate(false)}>
             Буду ждать

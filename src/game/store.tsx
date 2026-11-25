@@ -548,6 +548,10 @@ function useGameState() {
           d.flags.clsDefer = undefined;
           d.flags.clsNow = true;
         }),
+      teaTold: () =>
+        mutate((d) => {
+          d.flags.teaTold = true;
+        }),
       saveBene: (b: BeneState) =>
         mutate((d) => {
           d.bene = b;

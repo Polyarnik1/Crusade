@@ -103,6 +103,7 @@ export interface Flags {
   tookFromNeighbor: boolean;
   changedTower: boolean;
   bikeTold?: boolean;
+  teaTold?: boolean; // Бенедикт уже заикнулся про чай
   changedBanner: boolean;
   patron: boolean;
   exiled?: boolean; // правитель в изгнании: своих земель нет
