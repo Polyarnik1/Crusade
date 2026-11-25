@@ -5,7 +5,7 @@
 import { sfx } from './sfx';
 
 // тихий фон: слышен, но не спорит с «голосом» Бенедикта
-const BASE = 0.17;
+const BASE = 0.12;
 
 class Music {
   private buf: AudioBuffer | null = null;
