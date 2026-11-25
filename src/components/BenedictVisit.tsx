@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { music } from '../audio/music';
 import { sfx } from '../audio/sfx';
-import { answer, asksLeft, BENE_ASKS, freshDay, newBene, plural, solve, take, type Topic } from '../game/benedict';
+import { answer, asksLeft, BENE_ASKS, freshDay, newBene, solve, take, type Topic } from '../game/benedict';
 import * as T from '../game/benedictLines';
-import { streak } from '../game/achievements';
 import { useGame } from '../game/store';
 import type { BeneState } from '../game/types';
 import { Sprite } from './Benedict';
@@ -123,21 +122,11 @@ export function BenedictVisit({ onDone }: { onDone: () => void }) {
   };
 
   // ответ закончен: если вопросы кончились — прощальная фраза и уход
-  // раз в жизни, когда игрок уже несколько дней подряд заходит: просьба про чай перед уходом
-  const tea = (): string[] => {
-    if (s.flags.teaTold) return [];
-    const st = streak(s);
-    if (st < 3) return [];
-    act.teaTold();
-    const v = T.TEA[Math.floor(Math.random() * T.TEA.length)];
-    return v.map((l) => l.replace('{streak}', `${st} ${plural(st, 'день', 'дня', 'дней')}`));
-  };
-
   const finish = (ls: string[], nb: BeneState, isTsun?: boolean) => {
     if (asksLeft(nb) <= 0) {
       const lim = take(nb, 'lm', T.LIMIT);
       persist(nb);
-      say([...ls, lim, ...tea()], 'leave', isTsun);
+      say([...ls, lim], 'leave', isTsun);
     } else {
       persist(nb);
       say(ls, 'menu', isTsun);
@@ -177,7 +166,7 @@ export function BenedictVisit({ onDone }: { onDone: () => void }) {
     const nb = structuredClone(b);
     const l = take(nb, 'fw', T.FAREWELL);
     persist(nb);
-    say([l, ...tea()], 'leave');
+    say([l], 'leave');
   };
 
   const tap = () => {

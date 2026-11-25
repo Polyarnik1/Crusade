@@ -3,6 +3,7 @@ import { sfx } from './audio/sfx';
 import { music } from './audio/music';
 import { BenedictDialog } from './components/Benedict';
 import { BenedictVisit } from './components/BenedictVisit';
+import { TeaDialog } from './components/TeaDialog';
 import { ClassDialog, PathSheet } from './components/ClassChoice';
 import { dayKey } from './game/achievements';
 import { sulking, sulkLeft } from './game/benedict';
@@ -63,6 +64,17 @@ export function App() {
     !unlock && !s.ui.showFounding && !s.walk && tab === 'map' && !benedict && !visit;
   const [pickClass, setPickClass] = useState(false);
   const [pathDone, setPathDone] = useState(false);
+  // на седьмой день игры (или с регалией «Семь дней в седле») Бенедикт один раз просит чаю
+  const [tea, setTea] = useState(false);
+  const teaDue =
+    !!s.kingdom && !!s.flags.metBenedict && !s.flags.teaTold && (daysPlayed >= 7 || !!s.unlocked.streak7) && s.flags.clsDefer !== dayKey() &&
+    !unlock && !s.ui.showFounding && !s.walk && tab === 'map' && !benedict && !visit && !classDue && !pickClass && !pathDone;
+  useEffect(() => {
+    if (!teaDue) return;
+    music.preload();
+    const t = setTimeout(() => setTea(true), 1800);
+    return () => clearTimeout(t);
+  }, [teaDue]);
   useEffect(() => {
     if (!classDue) return;
     music.preload();
@@ -103,7 +115,7 @@ export function App() {
       <Toasts />
 
       {s.ui.showFounding && !unlock && <KingdomEditor />}
-      {unlock && !visit && !benedict && !pickClass && !pathDone && (
+      {unlock && !visit && !benedict && !pickClass && !pathDone && !tea && (
         <RegaliaSheet
           r={unlock}
           fresh
@@ -129,6 +141,17 @@ export function App() {
       {visit && <BenedictVisit onDone={() => setVisit(false)} />}
       {pickClass && (
         <ClassDialog onLeaving={(chosen) => chosen && setPathDone(true)} onDone={() => setPickClass(false)} />
+      )}
+      {tea && (
+        <TeaDialog
+          onDone={(toTreasury) => {
+            setTea(false);
+            if (toTreasury) {
+              setTab('hero');
+              setSettings(true);
+            }
+          }}
+        />
       )}
       {pathDone && s.cls && <PathSheet cls={s.cls} onClose={() => setPathDone(false)} />}
     </div>
