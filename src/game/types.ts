@@ -58,6 +58,8 @@ export interface ActiveWalk {
   gaps?: number; // сколько раз маршрут прерывался
   pace?: [number, number][]; // [время мс, накопленные метры] за последние ~40 с — для оценки скорости
   mode?: 'foot' | 'bike' | 'fast'; // пешком / верхом / слишком быстро
+  steps?: [number, number][]; // [шаг м, точность] последних фиксов — ловим «идеальный» поддельный GPS
+  susUntil?: number; // до какого времени точки не засчитываются (подозрительный GPS)
 }
 
 export interface DayActivity {

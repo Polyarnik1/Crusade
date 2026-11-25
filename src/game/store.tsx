@@ -314,15 +314,24 @@ function useGameState() {
           const w = d.walk;
           if (!w || w.pausedAt) return;
           const p: LatLng = [lat, lng];
+          // время фикса должно идти вперёд и совпадать с часами устройства — подделки часто врут
+          if (!w.sim && (ts <= w.lastTs || Math.abs(Date.now() - ts) > 60000)) return;
           d.lastPos = p;
           if (d.settings.demoNeighbors && d.neighbors.length === 0) d.neighbors = makeNeighbors(p);
           if (acc > 40) {
             w.gps = 'weak';
             return;
           }
+          if (!w.sim && w.susUntil && ts < w.susUntil) {
+            w.lastTs = ts;
+            w.segment = [p];
+            w.segmentLen = [0];
+            return;
+          }
           let lastSeg: LatLng | undefined = w.segment[w.segment.length - 1];
-          // разрыв: экран гас или GPS молчал. Прямую через «слепой» участок не считаем стеной
-          // для захвата — иначе срезанная хорда даёт землю, по которой рыцарь не ходил.
+          let joined = false;
+          // разрыв: экран гас или GPS молчал. Если скорость между последней и новой точкой
+          // правдоподобна, соединяем их прямой — у людей бывает всякое. Если нет, путь рвём.
           if (lastSeg && !w.sim) {
             const gapDt = (ts - w.lastTs) / 1000;
             const gd = dist(lastSeg, p);
@@ -330,20 +339,22 @@ function useGameState() {
             if ((wasHidden || gapDt > 25) && gd > 40) {
               const gv = gd / Math.max(1, gapDt);
               if (gv <= BIKE_MAX) {
-                // пройденное всё равно засчитываем в километры (по прямой — это минимум);
-                // верхом — с коэффициентом, быстрее велосипеда — не засчитываем
+                // по прямой — это минимум пройденного; верхом вёрсты идут с коэффициентом
                 const gk = gv > FOOT_MAX ? gd * BIKE_KM_SHARE : gd;
                 w.distance += gk;
                 d.totalDistance += gk;
                 today(d).walkedM += gk;
+                w.pace = [];
+                joined = true;
+              } else {
+                w.track.push([NaN, NaN]);
+                w.segment = [];
+                w.segmentLen = [];
+                w.gaps = (w.gaps ?? 0) + 1;
+                if (wasHidden && w.gaps === 1)
+                  toast(d, 'Путь прервался', 'Пока экран был выключен, GPS пропал, а новая точка слишком далеко. Этот участок не пойдёт в захват.', 'toast');
+                lastSeg = undefined;
               }
-              w.track.push([NaN, NaN]);
-              w.segment = [];
-              w.segmentLen = [];
-              w.gaps = (w.gaps ?? 0) + 1;
-              if (wasHidden && w.gaps === 1)
-                toast(d, 'Путь прервался', 'Пока экран был выключен, браузер не видел GPS. Этот участок не пойдёт в захват — держи экран включённым.', 'toast');
-              lastSeg = undefined;
             }
           }
           w.hiddenAt = null;
@@ -356,7 +367,27 @@ function useGameState() {
             }
             if (!w.sim && dt > 0 && dd / dt > 12) return; // скачок GPS, а не рыцарь на коне
             let km = dd; // сколько метров идёт в зачёт вёрст
-            if (!w.sim) {
+            if (!w.sim && !joined) {
+              // слишком «ровный» след — признак подделки: у живого GPS шаг и точность гуляют
+              const st = (w.steps ??= []);
+              st.push([dd, acc]);
+              if (st.length > 30) st.shift();
+              if (st.length === 30) {
+                const m = st.reduce((a, x) => a + x[0], 0) / 30;
+                const sd = Math.sqrt(st.reduce((a, x) => a + (x[0] - m) ** 2, 0) / 30);
+                if (sd / m < 0.025 && st.every((x) => x[1] === st[0][1])) {
+                  w.steps = [];
+                  w.susUntil = ts + 90000;
+                  w.track.push([NaN, NaN]);
+                  w.segment = [p];
+                  w.segmentLen = [0];
+                  w.lastTs = ts;
+                  toast(d, 'Странный GPS', 'Сигнал слишком ровный для живого человека. Несколько минут путь не засчитывается.', 'toast');
+                  return;
+                }
+              }
+            }
+            if (!w.sim && !joined) {
               const pace = (w.pace ??= []);
               pace.push([ts, (pace.length ? pace[pace.length - 1][1] : 0) + dd]);
               while (pace.length > 2 && ts - pace[0][0] > 40000) pace.shift();
@@ -380,6 +411,7 @@ function useGameState() {
               w.mode = mode;
               if (mode === 'bike') km = dd * BIKE_KM_SHARE;
             }
+            if (joined) km = 0; // вёрсты слепого участка уже засчитаны выше
             w.distance += km;
             d.totalDistance += km;
             const day = today(d);
