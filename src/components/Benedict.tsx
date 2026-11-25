@@ -126,19 +126,16 @@ export function BenedictDialog({ kingdom, onDone }: { kingdom: string; onDone: (
   const mood: Mood = n.mood ?? 'calm';
 
   useEffect(() => {
-    const t = setTimeout(() => setPhase('talk'), 1100);
-    // тема Бенедикта: входит вместе с ним и тает, когда он уходит
-    void music.play(3.5);
+    const t = setTimeout(() => {
+      setPhase('talk');
+      // тема Бенедикта: плавно входит, когда окно выехало и он начал говорить
+      void music.play(6);
+    }, 1100);
     return () => {
       clearTimeout(t);
       music.fadeOut(1.2);
     };
   }, []);
-
-  // под его речью музыка тише, в паузах громче
-  useEffect(() => {
-    if (phase === 'talk') music.setLevel(done ? 'idle' : 'talk');
-  }, [phase, done]);
 
   // печатаем текст по буквам
   useEffect(() => {

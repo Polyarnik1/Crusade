@@ -77,15 +77,9 @@ export function BenedictVisit({ onDone }: { onDone: () => void }) {
     return () => clearTimeout(t);
   }, [phase, shown, done, text, tsun]);
 
-  // под его речью музыка тише, в паузах громче
-  useEffect(() => {
-    if (phase === 'talk') music.setLevel(done ? 'idle' : 'talk');
-    else if (phase === 'menu' || phase === 'pick') music.setLevel('idle');
-  }, [phase, done]);
-
   const say = (ls: string[], next: 'menu' | 'pick' | 'leave', isTsun = false) => {
     if (isTsun) music.tapeStop();
-    else if (music.cut && next !== 'leave') void music.play(4.5); // неловкая пауза кончилась — тема тихо возвращается
+    else if (music.cut && next !== 'leave') void music.play(6); // неловкая пауза кончилась — тема тихо возвращается
     setLines(ls);
     setLine(0);
     setShown(0);
@@ -118,7 +112,7 @@ export function BenedictVisit({ onDone }: { onDone: () => void }) {
     later(() => setPhase('rise'), 560);
     later(() => {
       setRub(true);
-      void music.play(4);
+      void music.play(6);
       setBubble(take(nb, 'wk', T.WAKE));
       persist(nb);
       setPhase('menu');

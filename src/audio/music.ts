@@ -1,11 +1,11 @@
 // Музыка Бенедикта: одна тема («Seal of the Forgotten King») в бесшовной петле.
-// Плавно входит, тише под речь, мягко гаснет при уходе, а на цундере обрывается
+// Тихий эмбиент на постоянной громкости: плавно входит, мягко гаснет при уходе, а на цундере обрывается
 // «остановкой плёнки» — тон падает, звук съезжает в ноль, и наступает неловкая тишина.
 
 import { sfx } from './sfx';
 
-type Level = 'talk' | 'idle';
-const LEVEL: Record<Level, number> = { talk: 0.2, idle: 0.38 };
+// тихий фон: слышен, но не спорит с «голосом» Бенедикта
+const BASE = 0.17;
 
 class Music {
   private buf: AudioBuffer | null = null;
@@ -13,7 +13,6 @@ class Music {
   private src: AudioBufferSourceNode | null = null;
   private lp: BiquadFilterNode | null = null;
   private gain: GainNode | null = null;
-  private level: Level = 'idle';
   private offset = 0;
   private startedAt = 0;
   private want = false;
@@ -32,7 +31,7 @@ class Music {
 
   private target() {
     if (this.hidden || !sfx.enabled) return 0;
-    return LEVEL[this.level] * Math.min(1.4, sfx.volume / 0.7);
+    return BASE * Math.min(1.4, sfx.volume / 0.7);
   }
 
   private apply(tc: number) {
@@ -91,7 +90,7 @@ class Music {
     src.loop = true;
     const lp = ctx.createBiquadFilter();
     lp.type = 'lowpass';
-    lp.frequency.value = 18000;
+    lp.frequency.value = 5200; // срезаем верх — мягче, мягче «мешает» речи
     const g = ctx.createGain();
     g.gain.value = 0.0001;
     src.connect(lp).connect(g).connect(ctx.destination);
@@ -103,12 +102,6 @@ class Music {
     this.gain = g;
     g.gain.setValueAtTime(0.0001, ctx.currentTime);
     g.gain.linearRampToValueAtTime(Math.max(0.0002, this.target()), ctx.currentTime + fade);
-  }
-
-  /** Тише, пока Бенедикт говорит; громче в паузах. */
-  setLevel(l: Level) {
-    this.level = l;
-    this.apply(0.4);
   }
 
   private remember(ctx: AudioContext) {
@@ -154,7 +147,7 @@ class Music {
     r.setValueAtTime(1, t);
     r.exponentialRampToValueAtTime(0.05, t + 0.8);
     this.lp.frequency.cancelScheduledValues(t);
-    this.lp.frequency.setValueAtTime(18000, t);
+    this.lp.frequency.setValueAtTime(5200, t);
     this.lp.frequency.exponentialRampToValueAtTime(260, t + 0.8);
     const dead = this.src;
     window.setTimeout(() => {
