@@ -2,10 +2,11 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { REGALIA, dayKey } from './achievements';
 import type { SfxName } from '../audio/sfx';
 import { FORMS } from './cosmetics';
+import { newBene } from './benedict';
 import { CLOSE_DIST, MIN_LOOP_LEN, dist, formatArea, landArea, landCenter, loopPieces, merge, overlapArea, rect, subtract } from './geo';
 import { gloryForArea, gloryForDistance, titleOf } from './levels';
 import { makeNeighbors } from './neighbors';
-import type { ChronicleEntry, DayActivity, GameState, Hero, Kingdom, LatLng, Settings } from './types';
+import type { BeneState, ChronicleEntry, DayActivity, GameState, Hero, Kingdom, LatLng, Settings } from './types';
 
 const KEY = 'crusade.v1';
 export const DEFAULT_CENTER: LatLng = [55.752, 37.6175];
@@ -451,10 +452,24 @@ function useGameState() {
           d.flags.changedTower = true;
         }),
 
-      meetBenedict: (met = true) =>
+      meetBenedict: (met = true, sulk = false) =>
         mutate((d) => {
           d.flags.metBenedict = met;
+          if (met) d.bene = d.bene ? { ...d.bene, sulkUntil: newBene(sulk).sulkUntil } : newBene(sulk);
         }),
+      saveBene: (b: BeneState) =>
+        mutate((d) => {
+          d.bene = b;
+        }),
+      // для разработки: Бенедикт снова свеж — без лимита и обиды
+      restBene: () =>
+        mutate((d) => {
+          if (!d.bene) return;
+          d.bene.sulkUntil = undefined;
+          d.bene.day = undefined;
+          d.bene.riddleDay = d.bene.fortuneDay = d.bene.loreDay = undefined;
+        }),
+      notify: (title: string, text?: string) => mutate((d) => toast(d, title, text)),
 
       // для разработки: отобрать все земли, чтобы посмотреть, как выглядит изгнание
       loseLand: () =>

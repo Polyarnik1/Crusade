@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { sfx } from './audio/sfx';
 import { BenedictDialog } from './components/Benedict';
+import { BenedictVisit } from './components/BenedictVisit';
+import { sulking, sulkLeft } from './game/benedict';
+import { SULK } from './game/benedictLines';
 import { TabBar, Toasts, type Tab } from './components/ui';
 import { REGALIA } from './game/achievements';
 import { useGame } from './game/store';
@@ -47,6 +50,21 @@ export function App() {
     const t = setTimeout(() => setBenedict(true), 1600);
     return () => clearTimeout(t);
   }, [benedictDue]);
+  // кнопка-силуэт на карте зовёт Бенедикта
+  const [visit, setVisit] = useState(false);
+  useEffect(() => {
+    const call = () => {
+      if (!s.kingdom) return;
+      if (!s.flags.metBenedict) return setBenedict(true);
+      if (s.bene && sulking(s.bene)) {
+        act.notify('Бенедикт молчит', `${SULK[Math.floor(Math.random() * SULK.length)]} (${sulkLeft(s.bene)})`);
+        return;
+      }
+      setVisit(true);
+    };
+    window.addEventListener('bene:call', call);
+    return () => window.removeEventListener('bene:call', call);
+  }, [s.kingdom, s.flags.metBenedict, s.bene, act]);
   const unseen = REGALIA.some((r) => s.unlocked[r.id] && !s.seen[r.id]);
 
   return (
@@ -68,7 +86,7 @@ export function App() {
       <Toasts />
 
       {s.ui.showFounding && !unlock && <KingdomEditor />}
-      {unlock && (
+      {unlock && !visit && !benedict && (
         <RegaliaSheet
           r={unlock}
           fresh
@@ -85,12 +103,13 @@ export function App() {
       {benedict && s.kingdom && (
         <BenedictDialog
           kingdom={s.kingdom.name}
-          onDone={() => {
+          onDone={(sulk) => {
             setBenedict(false);
-            act.meetBenedict();
+            act.meetBenedict(true, sulk);
           }}
         />
       )}
+      {visit && <BenedictVisit onDone={() => setVisit(false)} />}
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { Banner, towerSvg } from '../art/heraldry';
 import { Bar, CrusaderHelm, Icon, Sheet } from '../components/ui';
 import { streak } from '../game/achievements';
 import { BENEDICT_SIL } from '../art/benedict.gen';
+import { sulking } from '../game/benedict';
 import { FORMS, WHITE_TONE, colorHex, kingdomTone } from '../game/cosmetics';
 import { dist, formatArea, formatKm, landArea, landCenter, towerSpots } from '../game/geo';
 import { titleOf } from '../game/levels';
@@ -280,10 +281,17 @@ export function MapScreen() {
             <button type="button" className="btn btn-icon" onClick={locate} aria-label="Показать, где я">
               <Icon name="locate" size={22} />
             </button>
-            {/* советник Бенедикт: пока без действия */}
-            <button type="button" className="btn btn-icon btn-bene" aria-label="Бенедикт" aria-disabled="true">
-              <img src={BENEDICT_SIL} alt="" />
-            </button>
+            {/* советник Бенедикт: появляется вместе с державой */}
+            {s.kingdom && (
+              <button
+                type="button"
+                className={'btn btn-icon btn-bene' + (sulking(s.bene) ? ' btn-bene--off' : '')}
+                aria-label="Позвать Бенедикта"
+                onClick={() => window.dispatchEvent(new Event('bene:call'))}
+              >
+                <img src={BENEDICT_SIL} alt="" />
+              </button>
+            )}
           </div>
         </div>
         {geo === 'ok' && !walk && acc !== null && acc > 50 && (

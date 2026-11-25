@@ -112,6 +112,23 @@ export interface Hero {
   games: string[];
 }
 
+/** Бенедикт: знакомство, лимиты и память о сказанном. */
+export interface BeneState {
+  metAt: number;
+  sulkUntil?: number; // дуется после «почему Бенедикт»
+  day?: string;
+  asks?: number;
+  rumours?: number;
+  riddleDay?: string;
+  fortuneDay?: string;
+  loreDay?: string;
+  used: Record<string, number[]>;
+  solved: number[];
+  tried: number[];
+  lore: number;
+  talks: number;
+}
+
 export interface GameState {
   version: 1;
   hero: Hero;
@@ -134,6 +151,7 @@ export interface GameState {
   lastPos: LatLng | null;
   settings: Settings;
   flags: Flags;
+  bene?: BeneState;
   // очередь интерфейса
   ui: {
     showFounding: boolean;

@@ -11,6 +11,34 @@ export interface Def2 {
 
 const rockTex = (sd: number) => (x: number, y: number) => (fbm(x * 0.35, y * 0.2, sd, 3) - 0.5) * 0.3 + (hash(x, y, sd) - 0.5) * 0.06;
 
+// ── камни с рунами и силуэт провидца (регалии загадок) ──
+const RUNE_A: [number, number][] = [[0, -3], [-1, -2], [1, -2], [-2, -1], [2, -1], [-1, 0], [1, 0], [-2, 1], [2, 1]];
+const RUNE_B: [number, number][] = [[0, -2], [0, -1], [0, 0], [0, 1], [0, 2], [-1, -1], [1, -1], [-2, -2], [2, -2]];
+const RUNE_C: [number, number][] = [[0, -2], [0, -1], [0, 0], [0, 1], [0, 2], [1, -1], [2, 0], [1, 1]];
+function runeStone(s: Scene2, cx: number, base: number, w: number, h: number, sd: number, rune: [number, number][]) {
+  const t = Math.round((hash(sd, 1, 9) - 0.5) * 3);
+  s.poly(
+    [[cx - w / 2, base + 1], [cx - w / 2, base - h * 0.6], [cx - w / 2 + 2 + t, base - h + 1], [cx + t, base - h - 1], [cx + w / 2 - 2 + t, base - h + 2], [cx + w / 2, base - h * 0.5], [cx + w / 2 + 1, base + 1]],
+    M.STONE, 0.32, { tex: rockTex(sd), flat: 0.15, tilt: [-0.35, -0.4] },
+  );
+  const rx = Math.round(cx + t / 2), ry = Math.round(base - h * 0.6);
+  for (const [dx, dy] of rune) for (const [ox, oy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+    if (!rune.some(([a, b]) => a === dx + ox && b === dy + oy)) s.put(rx + dx + ox, ry + dy + oy, M.ICE, 0.55);
+  }
+  for (const [dx, dy] of rune) s.put(rx + dx, ry + dy, M.STAR, 0.95);
+}
+/** Тёмный силуэт рогатого провидца с белыми щелями глаз. */
+function seer(s: Scene2, cx: number, base: number) {
+  s.poly([[cx - 8, base + 1], [cx - 5, base - 11], [cx + 5, base - 11], [cx + 8, base + 1]], M.VOID, 0);
+  s.poly([[cx - 3, base - 11], [cx - 3, base - 17], [cx - 2, base - 19], [cx + 2, base - 19], [cx + 3, base - 17], [cx + 3, base - 11], [cx + 1, base - 9], [cx - 1, base - 9]], M.VOID, 0);
+  const ant: [number, number][] = [[3, 18], [4, 19], [5, 20], [6, 21], [7, 22], [8, 23], [9, 24], [10, 25], [6, 22], [6, 23], [6, 24], [9, 23], [9, 22], [11, 24], [12, 24], [4, 20], [3, 21], [8, 25], [8, 26]];
+  for (const [dx, dy] of ant) {
+    s.put(cx - dx, base - dy, M.VOID, 0);
+    s.put(cx + dx, base - dy, M.VOID, 0);
+  }
+  for (const dx of [-2, -1, 1, 2]) s.put(cx + dx, base - 15, M.STAR, 1);
+}
+
 /** Ночное небо: луна, звёзды, облака. */
 function night(s: Scene2, mx: number, my: number, mr: number, o: { clouds?: [number, number, number]; kind?: 'night' | 'deep'; red?: boolean; shadow?: number; stars?: number } = {}) {
   s.sky(o.red ? 'blood' : o.kind ?? 'night', H * 0.7);
@@ -669,6 +697,42 @@ Object.assign(SCENES2, {
       knightStand(s, 30, 100, 0.85, { sword: true });
     },
   },
+  riddle1: {
+    draw: (s: Scene2) => {
+      night(s, 128, 18, 8, { clouds: [22, 42, 0.35] });
+      range(s, 58, 14, { seed: 41, snow: false });
+      s.fog(56, 4, 0.5);
+      rockyGround(s, (x) => 80 + Math.sin(x * 0.05) * 2, M.GROUND, 40);
+      s.pines(80, { x0: 130, x1: 168, hMin: 14, hMax: 22 });
+      runeStone(s, 102, 82, 15, 38, 5, RUNE_A);
+      s.pines(84, { x0: -6, x1: 16, hMin: 18, hMax: 26 });
+      knightStand(s, 58, 98, 0.85, { sword: true });
+    },
+  },
+  riddle3: {
+    draw: (s: Scene2) => {
+      night(s, 80, 15, 11, { kind: 'deep', clouds: [20, 40, 0.3], stars: 170 });
+      range(s, 60, 12, { seed: 43 });
+      s.fog(58, 5, 0.5);
+      rockyGround(s, (x) => 79 + Math.abs(x - 80) * 0.04, M.GROUND, 50);
+      runeStone(s, 50, 81, 12, 27, 7, RUNE_B);
+      runeStone(s, 112, 81, 12, 27, 8, RUNE_C);
+      runeStone(s, 81, 78, 14, 36, 9, RUNE_A);
+      knightStand(s, 26, 99, 0.85, { arms: 'v' });
+    },
+  },
+  riddle7: {
+    draw: (s: Scene2) => {
+      night(s, 96, 40, 20, { shadow: 0, clouds: [44, 58, 0.3], stars: 150 });
+      range(s, 64, 10, { seed: 47 });
+      s.fog(62, 4, 0.55);
+      s.hill((x) => 70 + Math.pow((x - 96) / 24, 2) * 5, M.GROUND, { lift: 0.15 });
+      seer(s, 96, 70);
+      rockyGround(s, (x) => 88 + Math.sin(x * 0.07) * 1.5, M.GROUND, 30);
+      s.pines(90, { x0: -6, x1: 20, hMin: 18, hMax: 26 });
+      knightStand(s, 42, 100, 0.85, { sword: true });
+    },
+  },
   far_land: {
     draw: (s: Scene2) => {
       night(s, 40, 20, 11, { clouds: [26, 40, 0.35] });
@@ -725,4 +789,7 @@ export const FX2: Record<string, { fx: string; emit?: [number, number]; subject?
   mordor: { fx: 'embers', emit: [80, 28] },
   far_land: { fx: 'stars' },
   outpost: { fx: 'fireflies' },
+  riddle1: { fx: 'fireflies', sparkle: [[102, 56]] },
+  riddle3: { fx: 'stars', sparkle: [[81, 52]] },
+  riddle7: { fx: 'stars', glow: [94, 55, 5, 1] },
 };

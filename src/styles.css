@@ -1119,7 +1119,7 @@ textarea.input {
 @media (prefers-reduced-motion: reduce) {
   .bene-unit, .bene--out .bene-unit, .bene-figure, .bene--out .bene-figure, .bene-tsun { animation: none; }
 }
-.btn-bene { padding: 0; cursor: default; }
+.btn-bene { padding: 0; }
 .btn-bene img { width: 40px; height: 33px; image-rendering: pixelated; display: block; }
 
 /* экран только вертикально: в горизонтали на телефоне просим повернуть обратно */
@@ -1152,4 +1152,94 @@ textarea.input {
     0%, 30% { transform: rotate(90deg); }
     70%, 100% { transform: rotate(0deg); }
   }
+}
+
+/* ── визит к Бенедикту: сон и пробуждение ─────────────── */
+.bene-figure { transition: transform 0.6s cubic-bezier(0.3, 1.35, 0.5, 1); transform-origin: 50% 50%; }
+.bene-lying { transform: translate(14px, 2px) rotate(90deg); }
+.bene-lying .bene-sprite {
+  -webkit-mask-image: linear-gradient(180deg, #000 82%, transparent 98%);
+  mask-image: linear-gradient(180deg, #000 82%, transparent 98%);
+  animation: bene-breathe 3.4s ease-in-out infinite;
+}
+@keyframes bene-breathe { 50% { transform: scaleX(1.03); } }
+.bene-jolt .bene-sprite { animation: bene-jolt 0.55s steps(7); }
+@keyframes bene-jolt {
+  0% { transform: none; }
+  20% { transform: translateX(-9px); }
+  40% { transform: translateX(4px) rotate(-3deg); }
+  60% { transform: translateX(-5px) rotate(2deg); }
+  80% { transform: translateX(2px); }
+  100% { transform: none; }
+}
+.bene-zzz {
+  position: absolute;
+  left: 176px;
+  bottom: calc(100% + 34px);
+  width: 60px;
+  height: 70px;
+  pointer-events: none;
+  z-index: 2;
+}
+.bene-zzz span {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  font-family: var(--pixel);
+  color: #cfdcf0;
+  text-shadow: 0 0 6px rgba(200, 220, 255, 0.6);
+  opacity: 0;
+  animation: bene-z 3s linear infinite;
+}
+.bene-zzz span:nth-child(1) { font-size: 13px; }
+.bene-zzz span:nth-child(2) { font-size: 17px; animation-delay: 1s; }
+.bene-zzz span:nth-child(3) { font-size: 22px; animation-delay: 2s; }
+@keyframes bene-z {
+  0% { opacity: 0; transform: translate(0, 0); }
+  15% { opacity: 1; }
+  100% { opacity: 0; transform: translate(26px, -58px); }
+}
+.bene-bubble {
+  position: absolute;
+  z-index: 3;
+  left: 148px;
+  bottom: calc(100% + 118px);
+  max-width: 200px;
+  padding: 8px 11px 9px;
+  background: #f2efe6;
+  color: #0b0a10;
+  font-family: var(--pixel);
+  font-size: 15px;
+  line-height: 1.25;
+  border: 3px solid #0a0b12;
+  box-shadow: 4px 4px 0 #0a0b12;
+  pointer-events: none;
+  animation: bene-pop 0.32s steps(3) both;
+}
+.bene-bubble::before,
+.bene-bubble::after {
+  content: '';
+  position: absolute;
+  background: #f2efe6;
+  border: 3px solid #0a0b12;
+}
+.bene-bubble::before { width: 10px; height: 10px; left: 10px; bottom: -12px; border-top: none; }
+.bene-bubble::after { width: 6px; height: 6px; left: 0; bottom: -21px; }
+.bene-bubble--low { left: 150px; bottom: calc(100% + 108px); }
+@keyframes bene-pop {
+  0% { transform: scale(0.4); opacity: 0; }
+  60% { transform: scale(1.08); opacity: 1; }
+  100% { transform: none; opacity: 1; }
+}
+.bene-box--visit .bene-name { left: auto; right: 22px; }
+.bene-hint { color: var(--muted); font-style: italic; }
+.bene-left { font-size: 12px; color: #9fb6d6; margin-bottom: 10px; }
+.bene-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.bene-grid .btn { justify-content: center; text-align: center; padding-left: 6px; padding-right: 6px; }
+.bene-bye { grid-column: 1 / -1; }
+.btn-bene--off { opacity: 0.45; filter: grayscale(0.6); }
+@media (prefers-reduced-motion: reduce) {
+  .bene-figure { transition: none; }
+  .bene-lying .bene-sprite, .bene-jolt .bene-sprite, .bene-zzz span, .bene-bubble { animation: none; }
+  .bene-zzz span { opacity: 1; }
 }

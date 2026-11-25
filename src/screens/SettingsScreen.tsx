@@ -140,6 +140,9 @@ export function SettingsScreen({ onBack }: { onBack: () => void }) {
           <button type="button" className="btn btn-sm" style={{ marginTop: 8 }} onClick={() => act.meetBenedict(false)} disabled={!s.kingdom || !s.flags.metBenedict}>
             Позвать снова
           </button>
+          <button type="button" className="btn btn-sm" style={{ marginTop: 8, marginLeft: 8 }} onClick={() => act.restBene()} disabled={!s.bene}>
+            Снять лимит и обиду
+          </button>
         </Row>
       </Group>
 

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { BENEDICT, BENEDICT_TSUN } from '../art/benedict.gen';
+import { BENEDICT, BENEDICT_SLEEP, BENEDICT_TSUN } from '../art/benedict.gen';
 import { sfx } from '../audio/sfx';
 
 // Бенедикт — загадочный советник. Выплывает из тени слева, говорит и уходит.
@@ -62,7 +62,7 @@ const EYES: [number, number][] = [
 ];
 
 /** Спрайт с живыми искрами из глаз и редким снегом. */
-function Sprite({ mood }: { mood: Mood }) {
+export function Sprite({ mood, sleep = false, rub = false }: { mood: Mood; sleep?: boolean; rub?: boolean }) {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const cv = ref.current;
@@ -71,16 +71,21 @@ function Sprite({ mood }: { mood: Mood }) {
     if (!ctx) return;
     const img = new Image();
     img.src = mood === 'tsun' ? BENEDICT_TSUN : BENEDICT;
+    const zzz = new Image();
+    zzz.src = BENEDICT_SLEEP;
     const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
     let raf = 0;
     const t0 = performance.now();
     const draw = (now: number) => {
       const t = (now - t0) / 1000;
       ctx.clearRect(0, 0, W, H);
-      if (img.complete) ctx.drawImage(img, 0, 0);
+      // продирает глаза: то открывает, то закрывает
+      const closed = sleep || (rub && t < 0.9 && Math.floor(t * 7) % 2 === 0);
+      const pic = closed ? zzz : img;
+      if (pic.complete) ctx.drawImage(pic, 0, 0);
       if (!still) {
         // искры из глаз: вверх и чуть в стороны
-        for (let i = 0; i < 24; i++) {
+        for (let i = 0; i < (closed ? 0 : 24); i++) {
           const [ex, ey] = EYES[i % 2];
           const age = (t / 2 + ((i * 0.618 + (i % 2) * 0.31) % 1)) % 1;
           const sd = i * 7.31;
@@ -102,11 +107,12 @@ function Sprite({ mood }: { mood: Mood }) {
     };
     raf = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(raf);
-  }, [mood]);
+  }, [mood, sleep, rub]);
   return <canvas ref={ref} width={W} height={H} className={'bene-sprite' + (mood === 'tsun' ? ' bene-tsun' : '')} />;
 }
 
-export function BenedictDialog({ kingdom, onDone }: { kingdom: string; onDone: () => void }) {
+export function BenedictDialog({ kingdom, onDone }: { kingdom: string; onDone: (sulk: boolean) => void }) {
+  const asked = useRef(false);
   const nodes = useMemo(() => script(kingdom), [kingdom]);
   const [node, setNode] = useState('intro');
   const [line, setLine] = useState(0);
@@ -136,13 +142,14 @@ export function BenedictDialog({ kingdom, onDone }: { kingdom: string; onDone: (
   }, [phase, shown, done, text, mood]);
 
   const go = (id: string) => {
+    if (id === 'name') asked.current = true;
     setNode(id);
     setLine(0);
     setShown(0);
   };
   const leave = () => {
     setPhase('out');
-    setTimeout(onDone, 1200);
+    setTimeout(() => onDone(asked.current), 1200);
   };
 
   const tap = () => {
