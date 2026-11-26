@@ -30,6 +30,6 @@ for i, st in enumerate(STYLES, 1):
 out.append("};")
 out.append("")
 out.append("// светящиеся точки (глаза, кристаллы, огонь): [x, y, цвет, тип e|c|f] в пикселях спрайта")
-out.append("export const AVATAR_GLOW: Record<string, Record<string, [number, number, string, string][]>> = " + json.dumps(emits, ensure_ascii=False, separators=(',', ':')) + ";")
+out.append("export const AVATAR_GLOW: Record<string, Record<string, [number, number, string, string, string][]>> = " + json.dumps(emits, ensure_ascii=False, separators=(',', ':')) + ";")
 open('/home/claude/crusade/src/art/avatars.gen.ts', 'w').write('\n'.join(out) + '\n')
 print('png bytes', tot)

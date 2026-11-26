@@ -726,6 +726,8 @@ def render(key, st, layers=False):
     # свечение
     R = max(2.2, N / 17)
     for x, y, c, g, _k in emit:
+        if layers and _k in ('eye', 'icepupil'):
+            continue  # ореол глаз рисует CSS — чтобы гас вместе с морганием
         ri = int(R) + 1
         for dy in range(-ri, ri + 1):
             for dx in range(-ri, ri + 1):
@@ -746,7 +748,22 @@ def render(key, st, layers=False):
             if B[y][x] != 'bg':
                 FP[x, y] = P[x, y] + (255,)
                 BP[x, y] = BC[x, y]
-    em = [(x, y, '#%02x%02x%02x' % tuple(c), {'eye': 'e', 'icepupil': 'e', 'crystal': 'c', 'flame': 'f'}[k]) for x, y, c, g, k in emit]
+    emitset = {(x, y) for x, y, c, g, k in emit}
+
+    def cover(x, y):
+        # веко: самый тёмный соседний пиксель фигуры, который сам не светится
+        best = None
+        for dy in (-1, 0, 1):
+            for dx in (-1, 0, 1):
+                X, Y = x + dx, y + dy
+                if (dx or dy) and 0 <= X < N and 0 <= Y < N and B[Y][X] != 'bg' and (X, Y) not in emitset:
+                    c = bgcopy_fig[X, Y]
+                    if best is None or lum(c) < lum(best):
+                        best = c
+        return best or (12, 10, 18)
+    bgcopy_fig = img.load()
+    em = [(x, y, '#%02x%02x%02x' % tuple(c), {'eye': 'e', 'icepupil': 'e', 'crystal': 'c', 'flame': 'f'}[k],
+           '#%02x%02x%02x' % tuple(cover(x, y)) if k in ('eye', 'icepupil') else '') for x, y, c, g, k in emit]
     return bgl, fig, em
     return img
 

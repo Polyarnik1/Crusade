@@ -60,6 +60,8 @@ export function Avatar({
     backgroundSize: `${size * 4}px ${size * 4}px`,
     backgroundPosition: pos,
   });
+  const blinkDur = (4 + (idx % 5) * 0.55).toFixed(2);
+  const blinkDelay = ((idx * 1.3) % 4).toFixed(2);
   const glow = live === 'off' ? [] : (AVATAR_GLOW[set]?.[AVATARS[idx]?.id] ?? []);
   return (
     <span
@@ -75,9 +77,28 @@ export function Avatar({
           <i
             key={i}
             className={'av-gl av-gl-' + k}
-            style={{ left: x * px, top: y * px, color: c, animationDelay: `-${((x * 7 + y * 3) % 5) * 0.4}s` }}
+            style={
+              {
+                left: x * px,
+                top: y * px,
+                color: c,
+                animationDelay: `-${((x * 7 + y * 3) % 5) * 0.4}s`,
+                ['--ed' as string]: `-${((x * 7 + y * 3) % 5) * 0.4}s`,
+                ['--bd' as string]: `${blinkDur}s`,
+                ['--bdl' as string]: `-${blinkDelay}s`,
+              } as CSSProperties
+            }
           />
         ))}
+        {glow.map(([x, y, , k, lid], i) =>
+          k === 'e' && lid ? (
+            <i
+              key={'l' + i}
+              className="av-lid"
+              style={{ left: x * px, top: y * px, background: lid, animationDuration: `${blinkDur}s`, animationDelay: `-${blinkDelay}s` }}
+            />
+          ) : null,
+        )}
       </span>
       {live === 'full' && <Fx set={set} />}
     </span>
