@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Banner, Tower } from '../art/heraldry';
 import { Pixel } from '../art/Pixel';
 import { REGALIA_ART } from '../art/arts';
+import { Avatar, AvatarPicker } from '../components/Avatar';
 import { Icon } from '../components/ui';
 import { REGALIA, regaliaCount, streak } from '../game/achievements';
 import { CLASSES, FORMS, colorHex } from '../game/cosmetics';
@@ -13,6 +14,7 @@ import type { Hero } from '../game/types';
 
 export function HeroScreen({ onSettings }: { onSettings: () => void }) {
   const { s, act } = useGame();
+  const [pickAvatar, setPickAvatar] = useState(false);
   const t = titleOf(s.glory);
   const k = s.kingdom;
   const form = FORMS.find((f) => f.id === k?.form);
@@ -35,9 +37,20 @@ export function HeroScreen({ onSettings }: { onSettings: () => void }) {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginTop: -64, position: 'relative' }}>
-        <div style={{ padding: 10, background: 'var(--panel)', border: '3px solid var(--line)', boxShadow: '0 4px 0 #000a' }}>
-          {k ? <Banner banner={k.banner} size={84} /> : <Pixel grid={REGALIA_ART.couch} size={96} />}
-        </div>
+        <button type="button" className="hero-avatar" onClick={() => setPickAvatar(true)} aria-label="Сменить аватарку">
+          <span className="frame" style={s.avatar ? undefined : { display: 'grid', placeItems: 'center' }}>
+            {s.avatar ? <Avatar a={s.avatar} size={96} /> : k ? <Banner banner={k.banner} size={72} /> : <Pixel grid={REGALIA_ART.couch} size={80} />}
+          </span>
+          {s.avatar && k && (
+            <span className="badge">
+              <Banner banner={k.banner} size={30} />
+            </span>
+          )}
+          <span className="edit pf" aria-hidden="true">✎</span>
+        </button>
+        <button type="button" className="btn btn-sm" style={{ marginTop: 12 }} onClick={() => setPickAvatar(true)}>
+          {s.avatar ? 'Сменить аватарку' : 'Выбрать аватарку'}
+        </button>
         <NameField value={s.hero.name} onSave={(name) => act.setHero({ name })} />
         <div className="muted" style={{ marginTop: 2, fontSize: 14 }}>
           Ур. {t.level} · {t.name}
@@ -139,6 +152,7 @@ export function HeroScreen({ onSettings }: { onSettings: () => void }) {
       <div className="muted" style={{ fontSize: 12, textAlign: 'center', marginTop: 16 }}>
         Пройдено {formatKm(s.totalDistance)} км · походов: {s.walks.length}
       </div>
+      {pickAvatar && <AvatarPicker onClose={() => setPickAvatar(false)} />}
     </div>
   );
 }

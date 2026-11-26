@@ -50,11 +50,13 @@ export function Sheet({
   onClose,
   center,
   label,
+  className = '',
 }: {
   children: ReactNode;
   onClose: () => void;
   center?: boolean;
   label: string;
+  className?: string;
 }) {
   useEffect(() => {
     if (!center) sfx.play('open');
@@ -68,7 +70,7 @@ export function Sheet({
   return (
     <div className="backdrop" onClick={onClose}>
       <div
-        className={'sheet' + (center ? ' center' : '')}
+        className={'sheet' + (center ? ' center' : '') + (className ? ' ' + className : '')}
         role="dialog"
         aria-modal="true"
         aria-label={label}

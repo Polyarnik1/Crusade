@@ -163,6 +163,7 @@ export interface GameState {
   flags: Flags;
   bene?: BeneState;
   cls?: import('./cosmetics').ClassId; // выбранный путь
+  avatar?: { set: string; id: string }; // выбранная аватарка героя
   // очередь интерфейса
   ui: {
     showFounding: boolean;

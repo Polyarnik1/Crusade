@@ -607,6 +607,10 @@ function useGameState() {
           d.habits = d.habits.filter((h) => h.id !== id);
         }),
 
+      setAvatar: (set: string, id: string) =>
+        mutate((d) => {
+          d.avatar = { set, id };
+        }),
       setHero: (patch: Partial<Hero>) => mutate((d) => void Object.assign(d.hero, patch)),
 
       setSettings: (patch: Partial<Settings>) =>
