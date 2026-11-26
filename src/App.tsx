@@ -31,6 +31,12 @@ export function App() {
   }, [act]);
 
   useEffect(() => {
+    const mono = s.settings.theme === 'mono';
+    document.documentElement.dataset.theme = mono ? 'mono' : 'gold';
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', mono ? '#0a0a0a' : '#0b0a10');
+  }, [s.settings.theme]);
+
+  useEffect(() => {
     sfx.enabled = s.settings.sound;
     sfx.setVolume(s.settings.volume);
   }, [s.settings.sound, s.settings.volume]);

@@ -18,8 +18,12 @@ import type { LatLng, Neighbor } from '../game/types';
 
 const NEUTRAL = '#E3B341';
 
+/** акцентный цвет текущей темы (золото или белый) для линий на карте */
+const accent = () => getComputedStyle(document.documentElement).getPropertyValue('--gold-l').trim() || '#F5D273';
+
 export function MapScreen() {
   const { s, act } = useGame();
+  const mono = s.settings.theme === 'mono';
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const layers = useRef<{ own?: L.Layer; nb?: L.LayerGroup; towers?: L.LayerGroup; track?: L.Layer; me?: L.Marker; acc?: L.Circle }>({});
@@ -184,11 +188,11 @@ export function MapScreen() {
         else parts[parts.length - 1].push(p);
       }
       const g = L.layerGroup().addTo(m);
-      L.polyline(parts, { color: '#F5D273', weight: 4, dashArray: '2 7', lineCap: 'square' }).addTo(g);
+      L.polyline(parts, { color: accent(), weight: 4, dashArray: '2 7', lineCap: 'square' }).addTo(g);
       // разрывы (экран гас, пауза) — тонкой бледной линией: видно, где маршрут не записан
       for (let i = 1; i < parts.length; i++) {
         const a = parts[i - 1][parts[i - 1].length - 1], b = parts[i][0];
-        if (a && b) L.polyline([a, b], { color: '#F5D273', weight: 1.5, opacity: 0.35, dashArray: '1 6' }).addTo(g);
+        if (a && b) L.polyline([a, b], { color: accent(), weight: 1.5, opacity: 0.35, dashArray: '1 6' }).addTo(g);
       }
       layers.current.track = g;
     }
@@ -208,7 +212,7 @@ export function MapScreen() {
     // круг точности: показывает, насколько можно доверять точке
     if (acc && !walk) {
       if (!layers.current.acc) {
-        layers.current.acc = L.circle(s.lastPos, { radius: acc, color: '#F5D273', weight: 1, opacity: 0.6, fillOpacity: 0.08, interactive: false }).addTo(m);
+        layers.current.acc = L.circle(s.lastPos, { radius: acc, color: accent(), weight: 1, opacity: 0.6, fillOpacity: 0.08, interactive: false }).addTo(m);
       } else layers.current.acc.setLatLng(s.lastPos).setRadius(acc);
     } else {
       layers.current.acc?.remove();
@@ -236,7 +240,7 @@ export function MapScreen() {
 
       <div className="hud hud-top">
         <div className="panel row" style={{ padding: '10px 12px' }}>
-          <div className={"lvl" + (s.kingdom ? "" : " lvl-none")} style={s.kingdom ? kingdomTone(s.kingdom.banner.color) : WHITE_TONE} aria-label={s.kingdom ? `Уровень ${t.level}` : "Королевство не основано"}>{s.kingdom ? t.level : "?"}</div>
+          <div className={"lvl" + (s.kingdom ? "" : " lvl-none")} style={s.kingdom && !mono ? kingdomTone(s.kingdom.banner.color) : WHITE_TONE} aria-label={s.kingdom ? `Уровень ${t.level}` : "Королевство не основано"}>{s.kingdom ? t.level : "?"}</div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="h2">{t.name}</div>
             <div style={{ margin: '6px 0 4px' }}>
@@ -319,6 +323,7 @@ export function MapScreen() {
 
 function IdlePanel({ todayM, goal }: { todayM: number; goal: number }) {
   const { s, act } = useGame();
+  const mono = s.settings.theme === 'mono';
   return (
     <div className="panel">
       <div className="label">Поход дня</div>
@@ -331,7 +336,7 @@ function IdlePanel({ todayM, goal }: { todayM: number; goal: number }) {
       <div style={{ margin: '10px 0 14px' }}>
         <Bar value={todayM / goal} />
       </div>
-      <button type="button" className={'btn btn-gold btn-big' + (s.kingdom ? '' : ' btn-glow')} style={s.kingdom ? kingdomTone(s.kingdom.banner.color) : WHITE_TONE} onClick={() => {
+      <button type="button" className={'btn btn-gold btn-big' + (s.kingdom ? '' : ' btn-glow')} style={s.kingdom && !mono ? kingdomTone(s.kingdom.banner.color) : WHITE_TONE} onClick={() => {
           sfx.play('march');
           act.startWalk(s.settings.simulate);
         }}>

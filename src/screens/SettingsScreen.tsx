@@ -39,6 +39,21 @@ export function SettingsScreen({ onBack }: { onBack: () => void }) {
         <h1 className="screen-title" style={{ fontSize: 28 }}>Настройки</h1>
       </div>
 
+      <Group title="Тема">
+        <div className="chips">
+          {(
+            [
+              ['gold', 'Золото'],
+              ['mono', 'Чёрно-белая'],
+            ] as const
+          ).map(([id, name]) => (
+            <button key={id} type="button" className={'chip' + ((st.theme ?? 'gold') === id ? ' on' : '')} onClick={() => act.setSettings({ theme: id })}>
+              {name}
+            </button>
+          ))}
+        </div>
+      </Group>
+
       <Group title="Облик башен">
         {s.kingdom ? (
           <Picks items={TOWERS} value={s.kingdom.tower} acc={{ reg, cls: s.cls }} onPick={act.setTower} render={(i) => <Tower tower={i.id} color={s.kingdom!.banner.color} size={32} />} />

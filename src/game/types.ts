@@ -96,6 +96,7 @@ export interface Settings {
   mapSource: 'auto' | 'osm' | 'osmfr' | 'carto';
   sound: boolean;
   volume: number; // 0..1
+  theme?: 'gold' | 'mono'; // золотая (по умолчанию) или чёрно-белая
 }
 
 export interface Flags {
