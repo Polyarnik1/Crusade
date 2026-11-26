@@ -1,4 +1,4 @@
-// Аватарки героя: 16 персонажей × 5 стилей. Спрайты — в src/art/avatars.gen.ts (листы 4×4).
+// Аватарки героя: 16 персонажей × 4 стиля. Спрайты — в src/art/avatars.gen.ts (листы 4×4).
 
 export interface AvatarSet {
   id: string;
@@ -11,7 +11,6 @@ export const AVATAR_SETS: AvatarSet[] = [
   { id: 'winter', name: 'Зимняя гравюра', blurb: 'Синий штрих, снегопад, снег на плечах' },
   { id: 'ash', name: 'Пепел и золото', blurb: 'Силуэты во тьме и золотая кромка света' },
   { id: 'glass', name: 'Витраж', blurb: 'Яркие цвета в свинцовых швах' },
-  { id: 'engrave', name: 'Гравюра', blurb: 'Тушь и серебро, как у Бенедикта' },
 ];
 
 export interface AvatarInfo {

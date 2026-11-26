@@ -664,7 +664,7 @@ def tex_off(tex, x, y, sd):
     return 0
 
 
-def render(key, st):
+def render(key, st, layers=False):
     sub = SUBJECTS[key]
     N = st['N']
     grid = rasterize(fix_lines(sub['shapes']), N)
@@ -675,6 +675,7 @@ def render(key, st):
     for y in range(N):
         for x in range(N):
             P[x, y] = st['bg'](x, y, N, sub, rnd)
+    bgcopy = img.copy()
     ramps = {}
     emit = []
     sd = sum(map(ord, key))
@@ -687,7 +688,7 @@ def render(key, st):
             col, kind = mat_color(sub, b)
             if kind == 'emit':
                 P[x, y] = st['emit'][b]
-                emit.append((x, y, st['emit'][b], st['glow'].get(b, 0.3)))
+                emit.append((x, y, st['emit'][b], st['glow'].get(b, 0.3), b))
                 continue
             if kind == 'flat':
                 P[x, y] = st['flat'](b, hx(col))
@@ -724,7 +725,7 @@ def render(key, st):
         st['post'](P, B, N)
     # свечение
     R = max(2.2, N / 17)
-    for x, y, c, g in emit:
+    for x, y, c, g, _k in emit:
         ri = int(R) + 1
         for dy in range(-ri, ri + 1):
             for dx in range(-ri, ri + 1):
@@ -733,6 +734,20 @@ def render(key, st):
                     r = math.hypot(dx, dy)
                     if 0 < r <= R:
                         P[X, Y] = mix(P[X, Y], c, g * (1 - r / (R + 0.6)) ** 1.5)
+    if not layers:
+        return img
+    # два слоя: фон (с ореолом свечения) и фигура с прозрачностью — фигура может «дышать» над неподвижным фоном
+    fig = Image.new('RGBA', (N, N), (0, 0, 0, 0))
+    bgl = img.copy()
+    FP, BP = fig.load(), bgl.load()
+    BC = bgcopy.load()
+    for y in range(N):
+        for x in range(N):
+            if B[y][x] != 'bg':
+                FP[x, y] = P[x, y] + (255,)
+                BP[x, y] = BC[x, y]
+    em = [(x, y, '#%02x%02x%02x' % tuple(c), {'eye': 'e', 'icepupil': 'e', 'crystal': 'c', 'flame': 'f'}[k]) for x, y, c, g, k in emit]
+    return bgl, fig, em
     return img
 
 

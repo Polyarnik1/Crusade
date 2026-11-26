@@ -1381,7 +1381,31 @@ textarea.input {
 .thanks-name { color: var(--gold); font-size: 15px; letter-spacing: 0.5px; }
 
 /* — аватарки — */
-.avatar { display: inline-block; flex: none; image-rendering: pixelated; background-repeat: no-repeat; }
+.avatar { position: relative; display: inline-block; flex: none; overflow: hidden; vertical-align: top; }
+.av-layer { position: absolute; inset: 0; display: block; image-rendering: pixelated; background-repeat: no-repeat; }
+.av-fig { transform-origin: 50% 100%; }
+.av-fig.live { animation: av-breathe-px 3.4s steps(1, end) infinite; }
+@keyframes av-breathe-px { 50% { transform: scaleY(1.024); } }
+.av-gl { position: absolute; width: var(--px); height: var(--px); background: currentColor; pointer-events: none; mix-blend-mode: screen; }
+.av-gl-e { box-shadow: 0 0 calc(var(--px) * 1) currentColor; animation: av-eye 3.6s ease-in-out infinite; }
+.av-gl-c { box-shadow: 0 0 calc(var(--px) * 2.2) currentColor; animation: av-crystal 2.2s ease-in-out infinite; }
+.av-gl-f { box-shadow: 0 0 calc(var(--px) * 2) currentColor; animation: av-flame 0.7s steps(2, end) infinite; }
+@keyframes av-eye { 0%, 100% { opacity: 0.15; } 45% { opacity: 0.85; } 52% { opacity: 0.02; } 58% { opacity: 0.85; } }
+@keyframes av-crystal { 0%, 100% { opacity: 0.5; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1.5); } }
+@keyframes av-flame { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.55; transform: scale(1.3) translateY(calc(var(--px) * -0.3)); } }
+/* эффекты поверх портрета */
+.av-fx { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.av-fx i { position: absolute; left: var(--l); top: var(--t); width: calc(var(--px) * var(--s) * 0.5); height: calc(var(--px) * var(--s) * 0.5); background: #fff; }
+.av-fx-winter i { top: 0; background: #e8f2ff; opacity: 0.9; animation: av-fall var(--d) linear var(--dl) infinite; }
+@keyframes av-fall { from { transform: translate(0, -8%); } 50% { transform: translate(var(--dx), 600%); } to { transform: translate(0, 1300%); } }
+.av-fx-ash i { top: auto; bottom: -4%; background: #ffb64a; box-shadow: 0 0 calc(var(--px) * 0.8) #f08a3c; animation: av-ember var(--d) ease-out var(--dl) infinite; }
+@keyframes av-ember { 0% { transform: translate(0, 0); opacity: 0; } 15% { opacity: 1; } 100% { transform: translate(var(--dx), -700%); opacity: 0; } }
+.av-fx-moon i { background: #f1e8ff; animation: av-twinkle var(--d) steps(2, end) var(--dl) infinite; }
+@keyframes av-twinkle { 0%, 100% { opacity: 0.1; } 50% { opacity: 1; } }
+.av-shoot { position: absolute; left: -10%; top: 12%; width: 22%; height: calc(var(--px) * 0.6); background: linear-gradient(90deg, transparent, #fff); transform: rotate(24deg); opacity: 0; animation: av-shoot 7s ease-in 1.2s infinite; }
+@keyframes av-shoot { 0% { transform: translate(0, 0) rotate(24deg); opacity: 0; } 4% { opacity: 1; } 12% { transform: translate(480%, 220%) rotate(24deg); opacity: 0; } 100% { opacity: 0; } }
+.av-glint { position: absolute; top: -10%; bottom: -10%; width: 26%; left: -40%; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.4), transparent); transform: skewX(-18deg); animation: av-glint 6.5s ease-in-out 1s infinite; }
+@keyframes av-glint { 0% { left: -40%; } 22%, 100% { left: 140%; } }
 .av-head { display: flex; gap: 14px; align-items: center; }
 .av-stage {
   position: relative; flex: none; width: 144px; height: 144px; overflow: hidden;
@@ -1394,7 +1418,7 @@ textarea.input {
   background: radial-gradient(circle, rgba(245, 210, 115, 0.35), transparent 58%);
   animation: av-breathe 3.6s ease-in-out infinite;
 }
-.av-big { position: relative; display: block; }
+.av-big { display: block; }
 .av-sheen {
   position: absolute; top: 0; bottom: 0; width: 38%; left: -50%; pointer-events: none;
   background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.5), transparent);
@@ -1453,10 +1477,10 @@ textarea.input {
 /* профиль: рамка аватарки */
 .hero-avatar { position: relative; padding: 0; border: 0; background: none; cursor: pointer; font: inherit; color: inherit; }
 .hero-avatar .frame { position: relative; display: block; width: 104px; height: 104px; border: 4px solid var(--gold); border-bottom-width: 7px; background: #07060b; box-shadow: 0 0 0 3px #000, 0 4px 0 3px #000a; overflow: hidden; }
-.hero-avatar .badge { position: absolute; right: -10px; bottom: -4px; padding: 6px; background: var(--panel); border: 3px solid var(--line); border-bottom-width: 5px; }
+.hero-avatar .badge { position: absolute; right: -24px; bottom: -10px; padding: 3px; line-height: 0; background: var(--panel); border: 2px solid var(--line); border-bottom-width: 4px; box-shadow: 0 0 0 2px #000; }
 .hero-avatar .edit { position: absolute; left: -8px; top: -8px; width: 26px; height: 26px; display: grid; place-items: center; background: var(--gold); color: #1a1408; font-size: 14px; border: 2px solid #000; }
 .hero-avatar:active .frame { transform: translateY(2px); }
 @media (prefers-reduced-motion: reduce) {
-  .av-stage, .av-glow, .av-sheen, .av-text, .av-tile, .av-check, .av-sheet { animation: none; }
+  .av-stage, .av-glow, .av-sheen, .av-text, .av-tile, .av-check, .av-sheet, .av-fig.live, .av-gl, .av-fx i, .av-shoot, .av-glint { animation: none; }
   .av-sheen { display: none; }
 }

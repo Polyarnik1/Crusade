@@ -39,11 +39,11 @@ export function HeroScreen({ onSettings }: { onSettings: () => void }) {
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginTop: -64, position: 'relative' }}>
         <button type="button" className="hero-avatar" onClick={() => setPickAvatar(true)} aria-label="Сменить аватарку">
           <span className="frame" style={s.avatar ? undefined : { display: 'grid', placeItems: 'center' }}>
-            {s.avatar ? <Avatar a={s.avatar} size={96} /> : k ? <Banner banner={k.banner} size={72} /> : <Pixel grid={REGALIA_ART.couch} size={80} />}
+            {s.avatar ? <Avatar a={s.avatar} size={96} live="full" /> : k ? <Banner banner={k.banner} size={72} /> : <Pixel grid={REGALIA_ART.couch} size={80} />}
           </span>
           {s.avatar && k && (
             <span className="badge">
-              <Banner banner={k.banner} size={30} />
+              <Banner banner={k.banner} size={22} />
             </span>
           )}
           <span className="edit pf" aria-hidden="true">✎</span>
