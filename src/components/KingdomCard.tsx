@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import { REGALIA_ART } from '../art/arts';
 import { Banner, Tower } from '../art/heraldry';
-import { Pixel } from '../art/Pixel';
+import { PAL, Pixel, type Palette } from '../art/Pixel';
 import { sfx } from '../audio/sfx';
 import { dayKey, REGALIA, regaliaCount } from '../game/achievements';
 import { plural } from '../game/benedict';
@@ -103,14 +103,29 @@ function stats(p: NeighborProfile, s: GameState) {
   return { t, total, reg, mine, myKm, kmMax };
 }
 
-function useGauges(p: NeighborProfile, base: number, compact = false) {
+function mixHex(a: string, b: string, k: number): string {
+  const pa = parseInt(a.slice(1), 16);
+  const pb = parseInt(b.slice(1), 16);
+  const ch = [16, 8, 0].map((s) => Math.round(((pa >> s) & 255) * (1 - k) + ((pb >> s) & 255) * k));
+  return '#' + ch.map((v) => v.toString(16).padStart(2, '0')).join('');
+}
+
+/** палитра значка шкалы в цвете королевства: основа, тень, свет */
+function iconPal(c: string): Palette {
+  return { ...PAL, Y: c, y: mixHex(c, '#000000', 0.5), M: mixHex(c, '#ffffff', 0.55), t: c, T: mixHex(c, '#ffffff', 0.4), K: mixHex(c, '#000000', 0.6) };
+}
+
+function useGauges(n: Neighbor, p: NeighborProfile, base: number, compact = false) {
+  const kc = colorHex(n.banner.color);
+  const kc2 = colorHex(n.banner.second);
+  const kc3 = mixHex(kc, kc2, 0.5);
   const { s } = useGame();
   const { t, total, reg, mine, myKm, kmMax } = useMemo(() => stats(p, s), [p, s]);
   const month = MONTHS[new Date().getMonth()];
   return (
     <div className={'gauges' + (compact ? ' gauges-c' : '')}>
       <Gauge
-        icon={<Pixel grid={ICO.crown} size={compact ? 14 : 18} />}
+        icon={<Pixel grid={ICO.crown} palette={iconPal(kc)} size={compact ? 14 : 18} />}
         label={compact ? `Ур. ${t.level} · слава` : `Ур. ${t.level} · ${t.name}`}
         value={t.next ? `${fmtNum(p.glory)} / ${fmtNum(t.next.from)}` : `${fmtNum(p.glory)} · предел`}
         frac={t.progress}
@@ -120,7 +135,7 @@ function useGauges(p: NeighborProfile, base: number, compact = false) {
         foot={t.next ? `до титула «${t.next.name}» — ${fmtNum(t.next.from - p.glory)} славы` : 'высший титул'}
       />
       <Gauge
-        icon={<Pixel grid={ICO.cup} size={compact ? 14 : 18} />}
+        icon={<Pixel grid={ICO.cup} palette={iconPal(kc2)} size={compact ? 14 : 18} />}
         label="Регалии"
         value={`${reg} из ${total} · ${Math.round((reg / total) * 100)}%`}
         frac={reg / total}
@@ -131,7 +146,7 @@ function useGauges(p: NeighborProfile, base: number, compact = false) {
         compact={compact}
       />
       <Gauge
-        icon={<Pixel grid={ICO.boot} size={compact ? 14 : 18} />}
+        icon={<Pixel grid={ICO.boot} palette={iconPal(kc3)} size={compact ? 14 : 18} />}
         label={`Вёрсты за ${month}`}
         value={`${fmtKm(p.kmMonth)} км`}
         frac={p.kmMonth / kmMax}
@@ -146,6 +161,20 @@ function useGauges(p: NeighborProfile, base: number, compact = false) {
   );
 }
 
+/** цвета чужого королевства для карточки и профиля; цвет текста на кнопках — по яркости */
+function cardTone(n: Neighbor): CSSProperties {
+  const kc = colorHex(n.banner.color);
+  const v = parseInt(kc.slice(1), 16);
+  const lum = (0.299 * ((v >> 16) & 255) + 0.587 * ((v >> 8) & 255) + 0.114 * (v & 255)) / 255;
+  const dark = lum > 0.55;
+  return {
+    '--kc': kc,
+    '--kc2': colorHex(n.banner.second),
+    '--kct': dark ? '#0b0a10' : '#fff',
+    '--kcs': dark ? 'none' : '0 2px 0 rgba(0,0,0,0.55)',
+  } as CSSProperties;
+}
+
 export function KingdomCard({ n, onClose }: { n: Neighbor; onClose: () => void }) {
   const p = profileOf(n);
   const form = FORMS.find((f) => f.id === n.form);
@@ -153,7 +182,7 @@ export function KingdomCard({ n, onClose }: { n: Neighbor; onClose: () => void }
   const cls = CLASSES.find((c) => c.id === p.cls);
   const [closing, setClosing] = useState(false);
   const [profile, setProfile] = useState(false);
-  const gauges = useGauges(p, 0.45, true);
+  const gauges = useGauges(n, p, 0.45, true);
 
   useEffect(() => {
     sfx.play('open');
@@ -169,7 +198,7 @@ export function KingdomCard({ n, onClose }: { n: Neighbor; onClose: () => void }
     setTimeout(onClose, 220);
   };
 
-  const tone = { '--kc': colorHex(n.banner.color), '--kc2': colorHex(n.banner.second) } as CSSProperties;
+  const tone = cardTone(n);
 
   return (
     <>
@@ -243,13 +272,13 @@ export function RulerProfile({ n, onClose }: { n: Neighbor; onClose: () => void 
   const t = titleOf(p.glory);
   const cls = CLASSES.find((c) => c.id === p.cls);
   const [closing, setClosing] = useState(false);
-  const gauges = useGauges(p, 0.35);
+  const gauges = useGauges(n, p, 0.35);
   const close = () => {
     if (closing) return;
     setClosing(true);
     setTimeout(onClose, 240);
   };
-  const tone = { '--kc': colorHex(n.banner.color), '--kc2': colorHex(n.banner.second) } as CSSProperties;
+  const tone = cardTone(n);
   const favs: [string, string[]][] = [
     ['Книги', p.books],
     ['Фильмы и сериалы', p.films],

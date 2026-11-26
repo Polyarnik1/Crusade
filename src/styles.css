@@ -1507,7 +1507,7 @@ textarea.input {
 .kc {
   position: relative; margin: auto; width: min(366px, 100%); padding: 16px 14px 10px;
   background: linear-gradient(180deg, color-mix(in srgb, var(--kc) 14%, #1a1824), #111018 62%);
-  border: 3px solid #3a3850; border-bottom-width: 6px;
+  border: 3px solid color-mix(in srgb, var(--kc) 75%, #1a1824); border-bottom-width: 6px;
   box-shadow: 0 0 0 3px #000, 0 18px 40px rgba(0, 0, 0, 0.6), 0 0 40px color-mix(in srgb, var(--kc) 20%, transparent);
   animation: kc-in 0.45s cubic-bezier(0.2, 0.9, 0.3, 1) both;
 }
@@ -1517,7 +1517,7 @@ textarea.input {
   background: repeating-linear-gradient(90deg, var(--kc) 0 14px, var(--kc2) 14px 28px); box-shadow: 0 2px 0 #000;
   transform-origin: left; animation: kc-unfurl-x 0.5s cubic-bezier(0.25, 1, 0.4, 1) 0.08s both;
 }
-.kc-corner { position: absolute; z-index: 5; width: 10px; height: 10px; background: var(--gold); border: 3px solid #0a0b12; transform: rotate(45deg); }
+.kc-corner { position: absolute; z-index: 5; width: 10px; height: 10px; background: var(--kc2); border: 3px solid #0a0b12; transform: rotate(45deg); }
 .kc-corner.tl { left: -9px; top: -9px; } .kc-corner.tr { right: -9px; top: -9px; }
 .kc-corner.bl { left: -9px; bottom: -11px; } .kc-corner.br { right: -9px; bottom: -11px; }
 
@@ -1657,6 +1657,27 @@ textarea.input {
 .rp-realm { display: flex; gap: 12px; align-items: center; }
 @keyframes rp-in { from { transform: translateX(100%); } }
 @keyframes rp-out { to { transform: translateX(100%); } }
+
+/* всё в цветах чужого королевства: карточка и профиль правителя */
+.kc, .rp {
+  --gold: var(--kc);
+  --gold-l: color-mix(in srgb, var(--kc) 50%, #fff);
+  --gold-d: color-mix(in srgb, var(--kc) 55%, #000);
+  --line: color-mix(in srgb, var(--kc) 45%, #26242f);
+}
+.kc .btn-gold, .rp .btn-gold { color: var(--kct, #fff); text-shadow: var(--kcs, none); }
+.kc .btn:not(.btn-gold), .rp .btn:not(.btn-gold) {
+  background: color-mix(in srgb, var(--kc) 22%, #1a1824);
+  border-top-color: color-mix(in srgb, var(--kc) 55%, #1a1824); border-left-color: color-mix(in srgb, var(--kc) 55%, #1a1824);
+  border-right-color: color-mix(in srgb, var(--kc) 25%, #08070c); border-bottom-color: color-mix(in srgb, var(--kc) 25%, #08070c);
+}
+.kc .gauge, .rp .gauge { --c1: color-mix(in srgb, var(--kc) 55%, #fff); --c2: var(--kc); --c3: color-mix(in srgb, var(--kc) 55%, #000); }
+.kc .gauge-violet, .rp .gauge-violet { --c1: color-mix(in srgb, var(--kc2) 55%, #fff); --c2: var(--kc2); --c3: color-mix(in srgb, var(--kc2) 55%, #000); }
+.kc .gauge-ice, .rp .gauge-ice {
+  --c1: color-mix(in srgb, color-mix(in srgb, var(--kc) 50%, var(--kc2)) 55%, #fff);
+  --c2: color-mix(in srgb, var(--kc) 50%, var(--kc2));
+  --c3: color-mix(in srgb, color-mix(in srgb, var(--kc) 50%, var(--kc2)) 55%, #000);
+}
 
 @media (prefers-reduced-motion: reduce) {
   .kc, .kc-stripe, .kc-seal, .kc-seal > :first-child, .kc-crest, .kc-ava > .avatar, .kc-who, .kc-actions, .kc-legend, .gauge, .gauge-fill, .gauge-fill::before, .gauge-me, .rp, .rp-ava { animation: none; }
