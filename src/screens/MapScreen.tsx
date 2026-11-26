@@ -23,7 +23,6 @@ const accent = () => getComputedStyle(document.documentElement).getPropertyValue
 
 export function MapScreen() {
   const { s, act } = useGame();
-  const mono = s.settings.theme === 'mono';
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const layers = useRef<{ own?: L.Layer; nb?: L.LayerGroup; towers?: L.LayerGroup; track?: L.Layer; me?: L.Marker; acc?: L.Circle }>({});
@@ -240,7 +239,7 @@ export function MapScreen() {
 
       <div className="hud hud-top">
         <div className="panel row" style={{ padding: '10px 12px' }}>
-          <div className={"lvl" + (s.kingdom ? "" : " lvl-none")} style={s.kingdom && !mono ? kingdomTone(s.kingdom.banner.color) : WHITE_TONE} aria-label={s.kingdom ? `Уровень ${t.level}` : "Королевство не основано"}>{s.kingdom ? t.level : "?"}</div>
+          <div className={"lvl" + (s.kingdom ? "" : " lvl-none")} style={s.kingdom ? kingdomTone(s.kingdom.banner.color) : WHITE_TONE} aria-label={s.kingdom ? `Уровень ${t.level}` : "Королевство не основано"}>{s.kingdom ? t.level : "?"}</div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="h2">{t.name}</div>
             <div style={{ margin: '6px 0 4px' }}>
@@ -323,7 +322,6 @@ export function MapScreen() {
 
 function IdlePanel({ todayM, goal }: { todayM: number; goal: number }) {
   const { s, act } = useGame();
-  const mono = s.settings.theme === 'mono';
   return (
     <div className="panel">
       <div className="label">Поход дня</div>
@@ -336,7 +334,7 @@ function IdlePanel({ todayM, goal }: { todayM: number; goal: number }) {
       <div style={{ margin: '10px 0 14px' }}>
         <Bar value={todayM / goal} />
       </div>
-      <button type="button" className={'btn btn-gold btn-big' + (s.kingdom ? '' : ' btn-glow')} style={s.kingdom && !mono ? kingdomTone(s.kingdom.banner.color) : WHITE_TONE} onClick={() => {
+      <button type="button" className={'btn btn-gold btn-big' + (s.kingdom ? '' : ' btn-glow')} style={s.kingdom ? kingdomTone(s.kingdom.banner.color) : WHITE_TONE} onClick={() => {
           sfx.play('march');
           act.startWalk(s.settings.simulate);
         }}>
