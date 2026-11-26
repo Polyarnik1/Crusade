@@ -1,10 +1,11 @@
 import { sfx } from '../audio/sfx';
 import L from 'leaflet';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { pixelize } from '../game/pixelLand';
 import { attachTiles, type TileHandle } from '../art/tiles';
-import { Banner, towerSvg } from '../art/heraldry';
-import { Bar, CrusaderHelm, Icon, Sheet } from '../components/ui';
+import { towerSvg } from '../art/heraldry';
+import { KingdomCard } from '../components/KingdomCard';
+import { Bar, CrusaderHelm, Icon } from '../components/ui';
 import { streak } from '../game/achievements';
 import { BENEDICT_SIL } from '../art/benedict.gen';
 import { sulking } from '../game/benedict';
@@ -311,7 +312,7 @@ export function MapScreen() {
 
       <div className="hud hud-bottom">{walk ? <WalkPanel /> : <IdlePanel todayM={todayM} goal={goal} />}</div>
 
-      {picked && <NeighborSheet n={picked} onClose={() => setPicked(null)} />}
+      {picked && <KingdomCard n={picked} onClose={() => setPicked(null)} />}
     </div>
   );
 }
@@ -450,30 +451,3 @@ function WalkPanel() {
   );
 }
 
-function NeighborSheet({ n, onClose }: { n: Neighbor; onClose: () => void }) {
-  const form = useMemo(() => FORMS.find((f) => f.id === n.form), [n.form]);
-  return (
-    <Sheet onClose={onClose} label={`Соседнее государство ${n.name}`}>
-      <div className="row" style={{ gap: 14, alignItems: 'flex-start' }}>
-        <Banner banner={n.banner} size={72} />
-        <div style={{ flex: 1 }}>
-          <div className="label">{form?.name ?? 'Государство'}</div>
-          <div className="h2" style={{ fontSize: 24, marginTop: 4 }}>{n.name}</div>
-          <div className="muted" style={{ marginTop: 6, fontSize: 14 }}>
-            {form?.ruler ?? 'Правитель'}: <b style={{ color: 'var(--text)' }}>{n.ruler}</b>
-          </div>
-          <div className="muted" style={{ marginTop: 2, fontSize: 14 }}>Владения: {formatArea(landArea(n.land))}</div>
-        </div>
-      </div>
-      <p style={{ lineHeight: 1.5, fontSize: 14, margin: '16px 0' }}>
-        Соседи — не враги. Но если замкнёшь петлю по их землям, граница сдвинется в твою пользу.
-      </p>
-      <p className="muted" style={{ fontSize: 13, lineHeight: 1.45, margin: '0 0 16px' }}>
-        Это демо-сосед: настоящие игроки появятся, когда подключим сервер. Убрать демо-соседей можно в настройках.
-      </p>
-      <button type="button" className="btn btn-block" onClick={onClose}>
-        Понятно
-      </button>
-    </Sheet>
-  );
-}
