@@ -153,7 +153,7 @@ const PROFILES: Record<string, NeighborProfile> = {
       'wanderer', 'lord', 'glory', 'exile', 'return_king', 'solstice', 'hectares', 'suzerain', 'hundred', 'mordor', 'far_land', 'riddle1',
     ],
     kmMonth: 88.4,
-    streak: 27,
+    streak: 143,
     cls: 'knight',
     about: 'Каждое утро обхожу границу, пока город спит. Лёд держит, если идти уверенно.',
     books: ['Песнь льда и пламени', 'Хоббит'],
