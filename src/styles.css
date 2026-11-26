@@ -1393,6 +1393,14 @@ textarea.input {
 /* веко: на долю секунды закрывает светящийся глаз */
 .av-lid { position: absolute; width: var(--px); height: var(--px); opacity: 0; pointer-events: none; animation: av-blink 4.6s steps(1, end) infinite; }
 @keyframes av-blink { 0%, 90% { opacity: 0; } 91%, 95% { opacity: 1; } 96%, 100% { opacity: 0; } }
+/* мягкий свет от глаз, кристаллов и огня: ложится на лицо и броню */
+.av-gl::before {
+  content: ''; position: absolute; left: 50%; top: 50%; width: calc(var(--px) * 9); height: calc(var(--px) * 9);
+  transform: translate(-50%, -50%); border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, color-mix(in srgb, currentColor 60%, transparent) 0%, color-mix(in srgb, currentColor 22%, transparent) 34%, transparent 70%);
+}
+.av-gl-c::before { width: calc(var(--px) * 8); height: calc(var(--px) * 8); opacity: 0.65; }
+.av-gl-f::before { width: calc(var(--px) * 9); height: calc(var(--px) * 9); opacity: 0.7; }
 @keyframes av-eye { 0%, 100% { opacity: 0.5; } 45% { opacity: 1; } 52% { opacity: 0.3; } 58% { opacity: 1; } }
 @keyframes av-vis { 0%, 90% { visibility: visible; } 91%, 95% { visibility: hidden; } 96%, 100% { visibility: visible; } }
 @keyframes av-crystal { 0%, 100% { opacity: 0.5; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1.5); } }
